@@ -1,0 +1,21 @@
+# dependencies
+/node_modules
+
+# next.js
+/.next/
+/out/
+next-env.d.ts
+
+# env / secrets — 絶対にコミットしない
+.env
+.env.*
+!.env.example
+*.pem
+service-account*.json
+gcp-key*.json
+
+# misc
+.DS_Store
+*.log
+.vercel
+*.tsbuildinfo

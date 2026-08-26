@@ -6,6 +6,9 @@
 /out/
 next-env.d.ts
 
+# production
+/build
+
 # env / secrets — 絶対にコミットしない
 .env
 .env.*
@@ -14,8 +17,14 @@ next-env.d.ts
 service-account*.json
 gcp-key*.json
 
+# knowledge cache（GitHub 同期の一時ファイル）
+/.knowledge-cache/
+
 # misc
 .DS_Store
 *.log
 .vercel
+/coverage
+
+# typescript
 *.tsbuildinfo

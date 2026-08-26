@@ -54,7 +54,22 @@ openssl rand -hex 32
 | `GOOGLE_SHEET_ID` | 手順3で控えたスプレッドシート ID |
 | `ENCRYPTION_KEY` | 手順4の暗号化鍵 |
 | `SESSION_SECRET` | 手順4のセッションシークレット |
-| `CRON_SECRET` | 手順4のスケジューラ用トークン（`/api/patrol` 保護用） |
+| `CRON_SECRET` | 手順4のスケジューラ用トークン（`/api/patrol`・`/api/support/sync` 保護用） |
+
+### 現場サポートモード用（任意）
+
+未設定でも「資料を検索して該当箇所を表示する」モードとして動作する。設定すると AI による回答生成・依頼文作成が有効になる。
+
+| 変数名 | 内容 |
+|---|---|
+| `ANTHROPIC_API_KEY` | Claude API キー。[Anthropic Console](https://console.anthropic.com/) で発行 |
+| `ANTHROPIC_MODEL` | 使用モデル（未設定なら `claude-sonnet-5`） |
+| `GITHUB_TOKEN` | 他リポジトリの資料を読む場合。**Contents: Read-only** の細粒度 PAT を推奨。public のみなら省略可 |
+| `DEV_REQUEST_REPO` | 依頼文を Issue として起票するリポジトリ（`owner/repo`） |
+| `DEV_REQUEST_CONTACT` | 依頼先の表示名（例：`開発チーム（Slack: #tool-support）`） |
+
+> 資料（`knowledge/` および参照する GitHub リポジトリ）に**パスワードや API キーの実値を書かない**こと。
+> `ANTHROPIC_API_KEY` を設定すると、質問文と抽出した資料が Anthropic API に送信される。
 
 > **`GOOGLE_PRIVATE_KEY` の注意**：JSON 内の private_key は改行を含む。環境変数に入れる際は改行を `\n` にエスケープして1行で格納し、コード側で `.replace(/\\n/g, '\n')` して使うのが定番。
 
@@ -70,3 +85,11 @@ openssl rand -hex 32
 2. 実行間隔を **5〜10分**に設定。
 3. リクエストヘッダーに `Authorization: Bearer <CRON_SECRET>`（実装に合わせる）を付け、無認可の呼び出しを弾けるようにする。
 4. あわせて `/api/health` も別監視として登録すると、システム自体の稼働監視（仕様書 §9）になる。IP 制限を敷く場合は監視元からの到達を許可する。
+
+## 7. 現場サポートモードの資料を用意する（任意）
+
+1. `knowledge/` の下にツールごとのフォルダを作り、現場向けの手順書を Markdown で置く。
+2. 他リポジトリの README やマニュアルを読ませる場合は `knowledge/sources.json` に追記する。
+3. `node scripts/check-knowledge.mjs 'ログインできない'` で、資料が読めているか確認する。
+
+詳しくは `docs/FIELD_SUPPORT.md` と `knowledge/README.md` を参照。

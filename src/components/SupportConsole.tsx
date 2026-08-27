@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
 import SimpleMarkdown from './SimpleMarkdown';
 import type { Citation, DevRequestDraft, SupportAnswer } from '@/lib/support/types';
 
@@ -39,7 +39,7 @@ function Citations({ citations }: { citations: Citation[] }) {
   if (citations.length === 0) return null;
   return (
     <div className="citations">
-      参照した資料:
+      <span className="citations__title">参照した資料</span>
       <ul>
         {citations.map((citation) => (
           <li key={`${citation.sourceLabel}-${citation.path}-${citation.heading}`}>
@@ -75,9 +75,16 @@ export default function SupportConsole({ initialTool, requester }: { initialTool
   const [draftError, setDraftError] = useState('');
   const [copied, setCopied] = useState(false);
 
+  const chatEnd = useRef<HTMLDivElement | null>(null);
+  const requestPanel = useRef<HTMLDivElement | null>(null);
+
   useEffect(() => {
     void loadSources();
   }, []);
+
+  useEffect(() => {
+    if (turns.length > 0) chatEnd.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }, [turns]);
 
   async function loadSources() {
     try {
@@ -99,6 +106,14 @@ export default function SupportConsole({ initialTool, requester }: { initialTool
     } finally {
       setSyncing(false);
     }
+  }
+
+  function openRequest(prefill?: string) {
+    setShowRequest(true);
+    if (prefill) setProblem((current) => current || prefill);
+    window.requestAnimationFrame(() =>
+      requestPanel.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+    );
   }
 
   async function ask(text: string) {
@@ -133,6 +148,14 @@ export default function SupportConsole({ initialTool, requester }: { initialTool
           index === current.length - 1 ? { ...turn, pending: false, error: '通信に失敗しました。' } : turn,
         ),
       );
+    }
+  }
+
+  function onComposerKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+    // Enter で送信、Shift+Enter で改行（日本語入力の変換確定は送信しない）
+    if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
+      event.preventDefault();
+      void ask(question);
     }
   }
 
@@ -176,8 +199,13 @@ export default function SupportConsole({ initialTool, requester }: { initialTool
       <div>
         {!aiEnabled && (
           <div className="alert alert--info">
-            AI 回答は未設定です（ANTHROPIC_API_KEY）。いまは関連する資料の該当箇所を検索して表示します。
-            依頼文の作成はテンプレートで動作します。
+            <span className="alert__icon" aria-hidden="true">
+              ℹ️
+            </span>
+            <span className="alert__body">
+              <strong>AI 回答は未設定です（ANTHROPIC_API_KEY）</strong>
+              いまは関連する資料の該当箇所を検索して表示します。依頼文の作成はテンプレートで動作します。
+            </span>
           </div>
         )}
 
@@ -192,23 +220,37 @@ export default function SupportConsole({ initialTool, requester }: { initialTool
         <div className="chat">
           {turns.length === 0 && (
             <div className="card">
-              <p style={{ margin: 0 }}>
-                わからないことを、そのままの言葉で書いてください。
-                <br />
+              <p style={{ marginTop: 0 }}>
+                <strong>わからないことを、そのままの言葉で書いてください。</strong>
+              </p>
+              <p className="muted" style={{ margin: 0 }}>
                 例：「請求書ツールにログインできない」「Figma の共有リンクの出し方がわからない」
+                <br />
+                答えは社内の資料をもとに作られ、根拠にした資料が回答の下に表示されます。
               </p>
             </div>
           )}
 
           {turns.map((turn, index) => (
-            <div key={`${turn.question}-${index}`}>
+            <div className="turn" key={`${turn.question}-${index}`}>
               <div className="bubble bubble--user">
-                <div className="bubble__role">現場からの質問</div>
+                <div className="bubble__role">
+                  <span aria-hidden="true">🙋</span> 質問
+                </div>
                 {turn.question}
               </div>
-              <div className="bubble bubble--ai" style={{ marginTop: 8 }}>
-                <div className="bubble__role">サポート</div>
-                {turn.pending && <span className="muted">資料を確認しています…</span>}
+              <div className="bubble bubble--ai">
+                <div className="bubble__role">
+                  <span aria-hidden="true">💬</span> サポート
+                </div>
+                {turn.pending && (
+                  <span className="typing" role="status">
+                    <i />
+                    <i />
+                    <i />
+                    資料を確認しています…
+                  </span>
+                )}
                 {turn.error && <span className="source-item__error">{turn.error}</span>}
                 {turn.answer && (
                   <>
@@ -219,12 +261,9 @@ export default function SupportConsole({ initialTool, requester }: { initialTool
                         <button
                           type="button"
                           className="button--ghost button--small"
-                          onClick={() => {
-                            setShowRequest(true);
-                            setProblem(turn.question);
-                          }}
+                          onClick={() => openRequest(turn.question)}
                         >
-                          開発者への依頼文を作る
+                          🛠 開発者への依頼文を作る
                         </button>
                       </div>
                     )}
@@ -233,138 +272,185 @@ export default function SupportConsole({ initialTool, requester }: { initialTool
               </div>
             </div>
           ))}
+          <div ref={chatEnd} />
         </div>
 
         <form
-          className="search-bar"
-          style={{ marginTop: 16 }}
+          className="composer"
           onSubmit={(event) => {
             event.preventDefault();
             void ask(question);
           }}
         >
-          <input
-            type="text"
+          <textarea
             value={question}
             onChange={(event) => setQuestion(event.target.value)}
-            placeholder="困っていることを書いてください"
+            onKeyDown={onComposerKeyDown}
+            placeholder="困っていることを書いてください（Enter で送信 / Shift+Enter で改行）"
             aria-label="質問"
+            rows={1}
           />
           <button type="submit" disabled={!question.trim()}>
             質問する
           </button>
         </form>
 
-        <h2>開発者へ依頼する</h2>
-        <p className="muted">
+        <h2 id="dev-request">開発者へ依頼する</h2>
+        <p className="muted" style={{ marginBottom: 12 }}>
           資料で解決しないときは、ここから依頼文を作れます。プログラムの言葉に直す作業はこちらで行います。
         </p>
 
-        {!showRequest ? (
-          <button type="button" className="button--ghost" onClick={() => setShowRequest(true)}>
-            依頼文を作成する
-          </button>
-        ) : (
-          <form className="card" onSubmit={createDraft}>
-            {draftError && <div className="alert">{draftError}</div>}
-            <div className="field">
-              <label htmlFor="req-problem">困っていること *</label>
-              <textarea
-                id="req-problem"
-                value={problem}
-                onChange={(event) => setProblem(event.target.value)}
-                placeholder="例: 請求書ツールで「保存」を押すと画面が真っ白になる"
-                required
-              />
-            </div>
-            <div className="field-row">
-              <div className="field">
-                <label htmlFor="req-tool">対象ツール</label>
-                <input
-                  id="req-tool"
-                  type="text"
-                  value={tool}
-                  onChange={(event) => setTool(event.target.value)}
-                  placeholder="例: 請求書ツール"
-                />
-              </div>
-              <div className="field">
-                <label htmlFor="req-urgency">緊急度</label>
-                <select
-                  id="req-urgency"
-                  value={urgency}
-                  onChange={(event) => setUrgency(event.target.value as '低' | '中' | '高')}
+        <div ref={requestPanel}>
+          {!showRequest ? (
+            <button type="button" className="button--ghost" onClick={() => openRequest()}>
+              依頼文を作成する
+            </button>
+          ) : (
+            <form className="card card--flush" onSubmit={createDraft}>
+              <div className="card__head">
+                <h3>依頼内容を入力</h3>
+                <span className="app-header__spacer" />
+                <button
+                  type="button"
+                  className="button--quiet button--small"
+                  onClick={() => setShowRequest(false)}
                 >
-                  <option value="低">低（急がない）</option>
-                  <option value="中">中（今週中に直したい）</option>
-                  <option value="高">高（業務が止まっている）</option>
-                </select>
+                  閉じる
+                </button>
               </div>
-            </div>
-            <div className="field">
-              <label htmlFor="req-steps">どんな操作をしましたか</label>
-              <textarea
-                id="req-steps"
-                value={steps}
-                onChange={(event) => setSteps(event.target.value)}
-                placeholder="例: 1. ログイン 2. 請求書一覧を開く 3. 保存ボタンを押す"
-              />
-            </div>
-            <div className="actions">
-              <button type="submit" disabled={draftBusy || !problem.trim()}>
-                {draftBusy ? '作成中…' : '依頼文を作る'}
-              </button>
-              <button type="button" className="button--ghost" onClick={() => setShowRequest(false)}>
-                閉じる
-              </button>
-            </div>
-          </form>
-        )}
+              <div className="card__body">
+                {draftError && (
+                  <div className="alert" role="alert">
+                    <span className="alert__icon" aria-hidden="true">
+                      ⚠️
+                    </span>
+                    <span className="alert__body">{draftError}</span>
+                  </div>
+                )}
+                <div className="field">
+                  <label htmlFor="req-problem">
+                    困っていること
+                    <span className="field__req">*</span>
+                  </label>
+                  <textarea
+                    id="req-problem"
+                    value={problem}
+                    onChange={(event) => setProblem(event.target.value)}
+                    placeholder="例: 請求書ツールで「保存」を押すと画面が真っ白になる"
+                    required
+                  />
+                </div>
+                <div className="field-row">
+                  <div className="field">
+                    <label htmlFor="req-tool">対象ツール</label>
+                    <input
+                      id="req-tool"
+                      type="text"
+                      value={tool}
+                      onChange={(event) => setTool(event.target.value)}
+                      placeholder="例: 請求書ツール"
+                    />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="req-urgency">緊急度</label>
+                    <select
+                      id="req-urgency"
+                      value={urgency}
+                      onChange={(event) => setUrgency(event.target.value as '低' | '中' | '高')}
+                    >
+                      <option value="低">低（急がない）</option>
+                      <option value="中">中（今週中に直したい）</option>
+                      <option value="高">高（業務が止まっている）</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="field">
+                  <label htmlFor="req-steps">どんな操作をしましたか</label>
+                  <textarea
+                    id="req-steps"
+                    value={steps}
+                    onChange={(event) => setSteps(event.target.value)}
+                    placeholder="例: 1. ログイン 2. 請求書一覧を開く 3. 保存ボタンを押す"
+                  />
+                </div>
+                <p className="field__hint">
+                  パスワードや API キーは書かないでください（依頼文には含めません）。
+                </p>
+                <div className="actions">
+                  <button type="submit" disabled={draftBusy || !problem.trim()}>
+                    {draftBusy ? '作成中…' : '依頼文を作る'}
+                  </button>
+                </div>
+              </div>
+            </form>
+          )}
+        </div>
 
         {draft && (
-          <div className="card" style={{ marginTop: 16 }}>
-            <h3 style={{ marginTop: 0 }}>{draft.title}</h3>
-            <pre className="draft">{draft.body}</pre>
-            <div className="actions">
-              <button type="button" onClick={copyDraft}>
-                {copied ? 'コピーしました' : '依頼文をコピー'}
-              </button>
-              {draft.issueUrl && (
-                <a className="button button--ghost" href={draft.issueUrl} target="_blank" rel="noreferrer noopener">
-                  GitHub Issue として起票する
-                </a>
+          <div className="card card--flush" style={{ marginTop: 16 }}>
+            <div className="card__head">
+              <h3>{draft.title}</h3>
+            </div>
+            <div className="card__body">
+              <pre className="draft">{draft.body}</pre>
+              <div className="actions">
+                <button type="button" onClick={copyDraft}>
+                  {copied ? '✓ コピーしました' : '依頼文をコピー'}
+                </button>
+                {draft.issueUrl && (
+                  <a
+                    className="button button--ghost"
+                    href={draft.issueUrl}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                  >
+                    GitHub Issue として起票する
+                  </a>
+                )}
+              </div>
+              {draft.fallback && (
+                <p className="field__hint">
+                  （AI 未設定のためテンプレートで作成しました。内容を確認して調整してください。）
+                </p>
               )}
             </div>
-            {draft.fallback && (
-              <p className="muted">
-                （AI 未設定のためテンプレートで作成しました。内容を確認して調整してください。）
-              </p>
-            )}
           </div>
         )}
       </div>
 
-      <aside className="card">
-        <h3 style={{ marginTop: 0 }}>いま参照できる資料</h3>
-        <p className="muted">
-          knowledge/ フォルダと、sources.json に登録した GitHub リポジトリの Markdown を読んでいます。
-        </p>
-        {sources.length === 0 && <p className="muted">資料が登録されていません。</p>}
-        {sources.map((source) => (
-          <div className="source-item" key={source.id}>
-            <div className="source-item__label">
-              {source.type === 'github' ? '🐙' : '📁'} {source.label}
-              <span className="muted"> / {source.docCount} 件</span>
-            </div>
-            <div className="source-item__meta">{source.location}</div>
-            {source.owner && <div className="source-item__meta">担当: {source.owner}</div>}
-            {source.error && <div className="source-item__error">読み込みエラー: {source.error}</div>}
+      <aside className="support-side">
+        <div className="card card--flush">
+          <div className="card__head">
+            <h3>いま参照できる資料</h3>
           </div>
-        ))}
-        <div className="actions">
-          <button type="button" className="button--ghost button--small" onClick={sync} disabled={syncing}>
-            {syncing ? '再読み込み中…' : '資料を再読み込み'}
-          </button>
+          <div className="card__body">
+            <p className="muted" style={{ marginTop: 0 }}>
+              knowledge/ フォルダと、sources.json に登録した GitHub リポジトリの Markdown を読んでいます。
+            </p>
+            {sources.length === 0 && <p className="muted">資料が登録されていません。</p>}
+            {sources.map((source) => (
+              <div className="source-item" key={source.id}>
+                <div className="source-item__label">
+                  <span aria-hidden="true">{source.type === 'github' ? '🐙' : '📁'}</span>
+                  {source.label}
+                  <span className="badge">{source.docCount} 件</span>
+                </div>
+                <div className="source-item__meta">{source.location}</div>
+                {source.owner && <div className="source-item__meta">担当: {source.owner}</div>}
+                {source.error && <div className="source-item__error">読み込みエラー: {source.error}</div>}
+              </div>
+            ))}
+            <div className="actions">
+              <button
+                type="button"
+                className="button--ghost button--small button--block"
+                onClick={sync}
+                disabled={syncing}
+              >
+                {syncing ? '再読み込み中…' : '🔄 資料を再読み込み'}
+              </button>
+            </div>
+          </div>
         </div>
       </aside>
     </div>

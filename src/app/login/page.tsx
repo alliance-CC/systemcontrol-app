@@ -14,11 +14,23 @@ export default async function LoginPage({
 
   return (
     <div className="login-wrap">
-      <h1>ログイン</h1>
-      <p className="lead">社内ツール管理システム</p>
+      <div className="login-brand">
+        <span className="login-brand__mark" aria-hidden="true">
+          🛠
+        </span>
+        <div>
+          <h1 style={{ fontSize: 20 }}>ツール管理システム</h1>
+          <p className="muted" style={{ margin: 0 }}>
+            社内ツール・アカウント・稼働状況
+          </p>
+        </div>
+      </div>
       <div className="card">
         <LoginForm next={next ?? '/'} />
       </div>
+      <p className="subtle" style={{ textAlign: 'center', marginTop: 16 }}>
+        ログインできないときは管理者にお問い合わせください。
+      </p>
     </div>
   );
 }

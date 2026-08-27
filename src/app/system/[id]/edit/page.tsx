@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireAdmin } from '@/lib/session';
 import { getRecord, listRecords } from '@/lib/records';
@@ -46,8 +47,17 @@ export default async function EditRecordPage({ params }: { params: Promise<{ id:
 
   return (
     <>
+      <p className="breadcrumb">
+        <Link href="/">一覧・検索</Link>
+        <span aria-hidden="true">›</span>
+        <Link href={`/system/${record.id}`}>{record.system_name}</Link>
+        <span aria-hidden="true">›</span>
+        <span>編集</span>
+      </p>
       <h1>編集</h1>
-      <p className="lead">{record.system_name} / {record.subcategory}</p>
+      <p className="lead">
+        {record.system_name} / {record.subcategory}
+      </p>
       <RecordForm master={master} systemNames={systemNames} mode="edit" initial={initial} />
     </>
   );

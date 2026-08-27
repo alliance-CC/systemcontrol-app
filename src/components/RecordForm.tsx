@@ -43,6 +43,14 @@ function Datalist({ id, options }: { id: string; options: string[] }) {
   );
 }
 
+function Required() {
+  return (
+    <span className="field__req" title="必須">
+      *
+    </span>
+  );
+}
+
 export default function RecordForm({
   master,
   systemNames = [],
@@ -117,128 +125,156 @@ export default function RecordForm({
   }
 
   return (
-    <form onSubmit={submit} className="card">
+    <form onSubmit={submit}>
       {errors.length > 0 && (
-        <div className="alert">
-          入力内容を確認してください。
-          <ul>
-            {errors.map((error) => (
-              <li key={error}>{error}</li>
-            ))}
-          </ul>
+        <div className="alert" role="alert">
+          <span className="alert__icon" aria-hidden="true">
+            ⚠️
+          </span>
+          <span className="alert__body">
+            <strong>入力内容を確認してください</strong>
+            <ul>
+              {errors.map((error) => (
+                <li key={error}>{error}</li>
+              ))}
+            </ul>
+          </span>
         </div>
       )}
 
-      <div className="field-row">
-        <div className="field">
-          <label htmlFor="system_name">システム名 *</label>
-          <input
-            id="system_name"
-            list="system-names"
-            value={systemName}
-            onChange={(event) => setSystemName(event.target.value)}
-            placeholder="例: 社内ポータル"
-            required
-          />
-          <Datalist id="system-names" options={systemNames} />
+      <fieldset className="form-section">
+        <legend>基本情報</legend>
+        <div className="field-row">
+          <div className="field">
+            <label htmlFor="system_name">
+              システム名
+              <Required />
+            </label>
+            <input
+              id="system_name"
+              list="system-names"
+              value={systemName}
+              onChange={(event) => setSystemName(event.target.value)}
+              placeholder="例: 社内ポータル"
+              required
+            />
+            <Datalist id="system-names" options={systemNames} />
+            <p className="field__hint">一覧ではこの名前でまとめて表示されます。</p>
+          </div>
+          <div className="field">
+            <label htmlFor="google_account">Google アカウント</label>
+            <input
+              id="google_account"
+              list="google-accounts"
+              value={googleAccount}
+              onChange={(event) => setGoogleAccount(event.target.value)}
+              placeholder="例: tool-admin@example.com"
+            />
+            <Datalist id="google-accounts" options={master.googleAccounts} />
+            <p className="field__hint">アカウントからの逆引き検索に使われます。</p>
+          </div>
         </div>
-        <div className="field">
-          <label htmlFor="google_account">Google アカウント</label>
-          <input
-            id="google_account"
-            list="google-accounts"
-            value={googleAccount}
-            onChange={(event) => setGoogleAccount(event.target.value)}
-            placeholder="例: tool-admin@example.com"
-          />
-          <Datalist id="google-accounts" options={master.googleAccounts} />
-        </div>
-      </div>
 
-      <div className="field-row">
-        <div className="field">
-          <label htmlFor="category">大項目 *</label>
-          <input
-            id="category"
-            list="categories"
-            value={category}
-            onChange={(event) => setCategory(event.target.value)}
-            placeholder="例: ツール / API"
-            required
-          />
-          <Datalist id="categories" options={master.categories} />
+        <div className="field-row">
+          <div className="field">
+            <label htmlFor="category">
+              大項目
+              <Required />
+            </label>
+            <input
+              id="category"
+              list="categories"
+              value={category}
+              onChange={(event) => setCategory(event.target.value)}
+              placeholder="例: ツール / API"
+              required
+            />
+            <Datalist id="categories" options={master.categories} />
+          </div>
+          <div className="field">
+            <label htmlFor="subcategory">
+              小項目（ツール名）
+              <Required />
+            </label>
+            <input
+              id="subcategory"
+              list="subcategories"
+              value={subcategory}
+              onChange={(event) => setSubcategory(event.target.value)}
+              placeholder="例: AWS / Figma"
+              required
+            />
+            <Datalist id="subcategories" options={master.subcategories} />
+            <p className="field__hint">
+              選ぶと、そのツール用の入力項目が下に表示されます（未定義のツールは汎用項目）。
+            </p>
+          </div>
         </div>
+      </fieldset>
+
+      <fieldset className="form-section">
+        <legend>死活監視</legend>
         <div className="field">
-          <label htmlFor="subcategory">小項目（ツール名） *</label>
+          <label htmlFor="health_check_url">ヘルスチェックURL</label>
           <input
-            id="subcategory"
-            list="subcategories"
-            value={subcategory}
-            onChange={(event) => setSubcategory(event.target.value)}
-            placeholder="例: AWS / Figma"
-            required
+            id="health_check_url"
+            type="url"
+            value={healthUrl}
+            onChange={(event) => setHealthUrl(event.target.value)}
+            placeholder="https://example.com/health"
           />
-          <Datalist id="subcategories" options={master.subcategories} />
           <p className="field__hint">
-            選ぶと、そのツール用の入力項目が下に表示されます（未定義のツールは汎用項目）。
+            未設定の場合は監視対象外（⚪）になります。社内 IP / localhost は登録できません。
           </p>
         </div>
-      </div>
+      </fieldset>
 
-      <div className="field">
-        <label htmlFor="health_check_url">ヘルスチェックURL</label>
-        <input
-          id="health_check_url"
-          type="url"
-          value={healthUrl}
-          onChange={(event) => setHealthUrl(event.target.value)}
-          placeholder="https://example.com/health"
-        />
-        <p className="field__hint">
-          未設定の場合は監視対象外（⚪）になります。社内 IP / localhost は登録できません。
+      <fieldset className="form-section">
+        <legend>追加項目{subcategory ? `（${subcategory}）` : ''}</legend>
+        <p className="form-section__hint">
+          🔒 が付いた項目は AES-256-GCM で暗号化して保存され、詳細画面では押したときだけ表示されます。
         </p>
-      </div>
-
-      <h3>追加項目{subcategory ? `（${subcategory}）` : ''}</h3>
-      {schema.map((field) => (
-        <div className="field" key={field.key}>
-          <label htmlFor={`detail-${field.key}`}>
-            {field.label}
-            {field.required ? ' *' : ''}
-            {field.secret ? '（暗号化して保存）' : ''}
-          </label>
-          {field.multiline ? (
-            <textarea
-              id={`detail-${field.key}`}
-              value={details[field.key] ?? ''}
-              onChange={(event) => setDetail(field.key, event.target.value)}
-            />
-          ) : (
-            <input
-              id={`detail-${field.key}`}
-              type={field.secret ? 'password' : 'text'}
-              autoComplete={field.secret ? 'new-password' : 'off'}
-              value={details[field.key] ?? ''}
-              onChange={(event) => setDetail(field.key, event.target.value)}
-              placeholder={field.placeholder ?? ''}
-            />
-          )}
-          {mode === 'edit' && field.secret && hasStoredSecret(field.key) && (
-            <p className="field__hint">
-              現在の値は登録済みです。空欄のままなら変更されません。
-              <label style={{ display: 'inline-flex', gap: 6, marginLeft: 10, fontWeight: 400 }}>
-                <input
-                  type="checkbox"
-                  style={{ width: 'auto' }}
-                  checked={clearKeys.includes(field.key)}
-                  onChange={(event) => toggleClear(field.key, event.target.checked)}
-                />
-                値を削除する
-              </label>
-            </p>
-          )}
-        </div>
-      ))}
+        {schema.length === 0 && <p className="muted">この小項目には追加項目がありません。</p>}
+        {schema.map((field) => (
+          <div className="field" key={field.key}>
+            <label htmlFor={`detail-${field.key}`}>
+              {field.secret && <span aria-hidden="true">🔒 </span>}
+              {field.label}
+              {field.required && <Required />}
+            </label>
+            {field.multiline ? (
+              <textarea
+                id={`detail-${field.key}`}
+                value={details[field.key] ?? ''}
+                onChange={(event) => setDetail(field.key, event.target.value)}
+                placeholder={field.placeholder ?? ''}
+              />
+            ) : (
+              <input
+                id={`detail-${field.key}`}
+                type={field.secret ? 'password' : 'text'}
+                autoComplete={field.secret ? 'new-password' : 'off'}
+                value={details[field.key] ?? ''}
+                onChange={(event) => setDetail(field.key, event.target.value)}
+                placeholder={field.placeholder ?? ''}
+              />
+            )}
+            {mode === 'edit' && field.secret && hasStoredSecret(field.key) && (
+              <p className="field__hint">
+                現在の値は登録済みです。空欄のままなら変更されません。
+                <label className="checkbox-inline">
+                  <input
+                    type="checkbox"
+                    checked={clearKeys.includes(field.key)}
+                    onChange={(event) => toggleClear(field.key, event.target.checked)}
+                  />
+                  値を削除する
+                </label>
+              </p>
+            )}
+          </div>
+        ))}
+      </fieldset>
 
       <div className="actions">
         <button type="submit" disabled={busy}>

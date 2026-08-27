@@ -37,7 +37,14 @@ export default function LoginForm({ next }: { next: string }) {
 
   return (
     <form onSubmit={submit}>
-      {error && <div className="alert">{error}</div>}
+      {error && (
+        <div className="alert" role="alert">
+          <span className="alert__icon" aria-hidden="true">
+            ⚠️
+          </span>
+          <span className="alert__body">{error}</span>
+        </div>
+      )}
       <div className="field">
         <label htmlFor="login_id">ログインID</label>
         <input
@@ -60,7 +67,7 @@ export default function LoginForm({ next }: { next: string }) {
           required
         />
       </div>
-      <button type="submit" disabled={busy}>
+      <button type="submit" className="button--block" disabled={busy} style={{ marginTop: 4 }}>
         {busy ? 'ログイン中…' : 'ログイン'}
       </button>
     </form>

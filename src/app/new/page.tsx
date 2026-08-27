@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { requireAdmin } from '@/lib/session';
 import { loadMaster } from '@/lib/master';
 import { listRecords } from '@/lib/records';
@@ -21,9 +22,23 @@ export default async function NewRecordPage() {
 
   return (
     <>
+      <p className="breadcrumb">
+        <Link href="/">一覧・検索</Link>
+        <span aria-hidden="true">›</span>
+        <span>新規登録</span>
+      </p>
       <h1>新規登録</h1>
-      <p className="lead">機密項目（パスワード・APIキー等）は保存時に暗号化されます。</p>
-      {loadError && <div className="alert alert--info">{loadError}</div>}
+      <p className="lead">
+        ツール・API・アカウントを 1 件登録します。機密項目（パスワード・APIキー等）は保存時に暗号化されます。
+      </p>
+      {loadError && (
+        <div className="alert alert--warn">
+          <span className="alert__icon" aria-hidden="true">
+            ⚠️
+          </span>
+          <span className="alert__body">{loadError}</span>
+        </div>
+      )}
       <RecordForm master={master} systemNames={systemNames} mode="create" />
     </>
   );

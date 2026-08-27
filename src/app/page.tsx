@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { requireUser } from '@/lib/session';
 import { canWrite } from '@/lib/permissions';
 import { searchRecords, toSafeRecord } from '@/lib/records';
+import StatusPill from '@/components/StatusPill';
 import { STATUS_ICON, STATUS_LABEL, type HealthStatus, type SafeToolRecord } from '@/lib/types';
 
 /** システム一覧・統合検索（要件定義書 §6 ②） */
@@ -13,6 +14,8 @@ type Grouped = {
   records: SafeToolRecord[];
   hasDown: boolean;
 };
+
+const STATUS_ORDER: HealthStatus[] = ['up', 'down', 'unknown', 'none'];
 
 function groupBySystem(records: SafeToolRecord[]): Grouped[] {
   const map = new Map<string, SafeToolRecord[]>();
@@ -26,106 +29,212 @@ function groupBySystem(records: SafeToolRecord[]): Grouped[] {
       records: items,
       hasDown: items.some((item) => item.last_status === 'down'),
     }))
-    .sort((a, b) => a.systemName.localeCompare(b.systemName, 'ja'));
+    // 対応が必要なものを先頭に出す
+    .sort((a, b) =>
+      a.hasDown === b.hasDown ? a.systemName.localeCompare(b.systemName, 'ja') : a.hasDown ? -1 : 1,
+    );
+}
+
+function filterHref(query: string, status?: HealthStatus): string {
+  const params = new URLSearchParams();
+  if (query) params.set('q', query);
+  if (status) params.set('status', status);
+  const search = params.toString();
+  return search ? `/?${search}` : '/';
+}
+
+function isHealthStatus(value: string | undefined): value is HealthStatus {
+  return value === 'up' || value === 'down' || value === 'unknown' || value === 'none';
 }
 
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; status?: string }>;
 }) {
   const user = await requireUser();
-  const { q } = await searchParams;
+  const { q, status } = await searchParams;
   const query = q ?? '';
+  const statusFilter = isHealthStatus(status) ? status : undefined;
 
-  let groups: Grouped[] = [];
+  let all: SafeToolRecord[] = [];
   let loadError = '';
-  let total = 0;
 
   try {
-    const records = (await searchRecords(query)).map(toSafeRecord);
-    total = records.length;
-    groups = groupBySystem(records);
+    all = (await searchRecords(query)).map(toSafeRecord);
   } catch {
     loadError =
       'スプレッドシートからデータを取得できませんでした。環境変数と共有設定（SETUP.md 手順 2・3）を確認してください。';
   }
 
-  const statusTotals = groups
-    .flatMap((group) => group.records)
-    .reduce<Record<HealthStatus, number>>(
-      (acc, record) => ({ ...acc, [record.last_status]: acc[record.last_status] + 1 }),
-      { up: 0, down: 0, unknown: 0, none: 0 },
-    );
+  const statusTotals = all.reduce<Record<HealthStatus, number>>(
+    (acc, record) => ({ ...acc, [record.last_status]: acc[record.last_status] + 1 }),
+    { up: 0, down: 0, unknown: 0, none: 0 },
+  );
+
+  const visible = statusFilter ? all.filter((record) => record.last_status === statusFilter) : all;
+  const groups = groupBySystem(visible);
 
   return (
     <>
-      <h1>システム一覧</h1>
-      <p className="lead">
-        システム名・Google アカウント・ツール名・追加項目を横断検索します（機密値は検索対象外）。
-      </p>
+      <div className="page-head">
+        <div>
+          <h1>システム一覧</h1>
+          <p className="lead" style={{ marginBottom: 0 }}>
+            システム名・Google アカウント・ツール名・追加項目を横断検索します（機密値は検索対象外）。
+          </p>
+        </div>
+        {canWrite(user) && (
+          <div className="page-head__actions">
+            <Link className="button" href="/new">
+              ＋ 新規登録
+            </Link>
+          </div>
+        )}
+      </div>
 
-      {loadError && <div className="alert">{loadError}</div>}
+      {loadError && (
+        <div className="alert">
+          <span className="alert__icon" aria-hidden="true">
+            ⚠️
+          </span>
+          <span className="alert__body">
+            <strong>データを表示できません</strong>
+            {loadError}
+          </span>
+        </div>
+      )}
 
-      <form className="search-bar" method="get">
-        <input
-          type="search"
-          name="q"
-          defaultValue={query}
-          placeholder="例: 社内ポータル / example@gmail.com / AWS"
-          aria-label="統合検索"
-        />
+      {statusTotals.down > 0 && (
+        <div className="alert">
+          <span className="alert__icon" aria-hidden="true">
+            🔴
+          </span>
+          <span className="alert__body">
+            <strong>{statusTotals.down} 件のツールが停止・エラーになっています</strong>
+            <Link href={filterHref(query, 'down')}>該当のツールを表示する</Link>
+          </span>
+        </div>
+      )}
+
+      <div className="stat-grid">
+        <Link
+          className="stat"
+          href={filterHref(query)}
+          aria-current={statusFilter === undefined ? 'true' : undefined}
+        >
+          <span className="stat__label">すべて</span>
+          <span className="stat__value">{all.length}</span>
+        </Link>
+        {STATUS_ORDER.map((key) => (
+          <Link
+            className={`stat stat--${key}`}
+            key={key}
+            href={filterHref(query, key)}
+            aria-current={statusFilter === key ? 'true' : undefined}
+          >
+            <span className="stat__label">
+              <span aria-hidden="true">{STATUS_ICON[key]}</span>
+              {STATUS_LABEL[key]}
+            </span>
+            <span className="stat__value">{statusTotals[key]}</span>
+          </Link>
+        ))}
+      </div>
+
+      <form className="searchbar" method="get" role="search">
+        {statusFilter && <input type="hidden" name="status" value={statusFilter} />}
+        <div className="searchbar__input">
+          <span className="searchbar__icon" aria-hidden="true">
+            🔍
+          </span>
+          <input
+            type="search"
+            name="q"
+            defaultValue={query}
+            placeholder="例: 社内ポータル / example@gmail.com / AWS"
+            aria-label="統合検索"
+          />
+        </div>
         <button type="submit">検索</button>
-        {query && (
+        {(query || statusFilter) && (
           <Link className="button button--ghost" href="/">
-            クリア
+            条件をクリア
           </Link>
         )}
       </form>
 
-      <p className="muted">
-        {total} 件 / {STATUS_ICON.up} {statusTotals.up} ・ {STATUS_ICON.down} {statusTotals.down} ・{' '}
-        {STATUS_ICON.unknown} {statusTotals.unknown} ・ {STATUS_ICON.none} {statusTotals.none}
+      <p className="muted" style={{ marginBottom: 18 }}>
+        {visible.length} 件を表示
+        {query && `（「${query}」で検索）`}
+        {statusFilter && `（${STATUS_LABEL[statusFilter]}のみ）`}
       </p>
 
       {groups.length === 0 && !loadError && (
-        <p className="empty">
-          {query ? '該当するデータがありませんでした。' : 'まだ登録がありません。'}
-          {canWrite(user) && (
-            <>
-              <br />
-              <Link href="/new">新規登録はこちら</Link>
-            </>
-          )}
-        </p>
+        <div className="empty">
+          <span className="empty__icon" aria-hidden="true">
+            {query || statusFilter ? '🔍' : '🗂'}
+          </span>
+          <p className="empty__title">
+            {query || statusFilter ? '該当するデータがありませんでした' : 'まだ登録がありません'}
+          </p>
+          <p style={{ margin: 0 }}>
+            {query || statusFilter ? (
+              <Link href="/">条件をクリアしてすべて表示する</Link>
+            ) : canWrite(user) ? (
+              <Link href="/new">最初のツールを登録する</Link>
+            ) : (
+              '管理者が登録すると、ここに表示されます。'
+            )}
+          </p>
+        </div>
       )}
 
       <div className="grid">
         {groups.map((group) => (
-          <section className="card" key={group.systemName}>
-            <div className="card__title">
-              <span>{group.systemName}</span>
+          <section className={`syscard${group.hasDown ? ' syscard--alert' : ''}`} key={group.systemName}>
+            <div className="syscard__head">
+              <div className="syscard__title">
+                {group.systemName}
+                <span className="syscard__meta" style={{ display: 'block' }}>
+                  {group.records.length} 件のツール / アカウント
+                </span>
+              </div>
               {group.hasDown && <span className="badge badge--down">要対応</span>}
             </div>
-            <div className="card__meta">{group.records.length} 件のツール / アカウント</div>
-            <div style={{ marginTop: 10 }}>
+            <ul className="syscard__list">
               {group.records.map((record) => (
-                <div className="tool-row" key={record.id}>
-                  <span title={STATUS_LABEL[record.last_status]}>{STATUS_ICON[record.last_status]}</span>
-                  <span className="tool-row__name">
-                    <Link href={`/system/${record.id}`}>
-                      {record.subcategory || record.category || '(未分類)'}
-                    </Link>
-                    {record.google_account && (
-                      <span className="card__meta"> / {record.google_account}</span>
-                    )}
-                  </span>
-                </div>
+                <li key={record.id}>
+                  <Link className="tool-row" href={`/system/${record.id}`}>
+                    <span className="tool-row__dot" title={STATUS_LABEL[record.last_status]}>
+                      <span aria-hidden="true">{STATUS_ICON[record.last_status]}</span>
+                      <span className="sr-only">{STATUS_LABEL[record.last_status]}</span>
+                    </span>
+                    <span className="tool-row__body">
+                      <span className="tool-row__name">
+                        {record.subcategory || record.category || '(未分類)'}
+                      </span>
+                      <span className="tool-row__sub">
+                        {record.google_account || record.category || '—'}
+                      </span>
+                    </span>
+                    <span className="tool-row__chevron" aria-hidden="true">
+                      ›
+                    </span>
+                  </Link>
+                </li>
               ))}
-            </div>
+            </ul>
           </section>
         ))}
       </div>
+
+      {!loadError && all.length > 0 && (
+        <p className="subtle" style={{ marginTop: 24 }}>
+          稼働状況は外部スケジューラからの <code>/api/patrol</code> 実行時に更新されます。
+          <StatusPill status="none" /> は監視 URL が未設定のツールです。
+        </p>
+      )}
     </>
   );
 }

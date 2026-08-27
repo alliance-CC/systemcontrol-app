@@ -3,11 +3,14 @@ import { requireUser } from '@/lib/session';
 import { canWrite } from '@/lib/permissions';
 import { searchRecords, toSafeRecord } from '@/lib/records';
 import StatusPill from '@/components/StatusPill';
+import ToolDeck from '@/components/ToolDeck';
 import { STATUS_ICON, STATUS_LABEL, type HealthStatus, type SafeToolRecord } from '@/lib/types';
 
-/** システム一覧・統合検索（要件定義書 §6 ②） */
+/** システム一覧・統合検索（要件定義書 §6 ②）。既定はカード送り、切り替えで一覧 */
 
 export const dynamic = 'force-dynamic';
+
+type ViewMode = 'card' | 'list';
 
 type Grouped = {
   systemName: string;
@@ -16,6 +19,8 @@ type Grouped = {
 };
 
 const STATUS_ORDER: HealthStatus[] = ['up', 'down', 'unknown', 'none'];
+/** カードで先に出す順（対応が必要なものから） */
+const DECK_PRIORITY: Record<HealthStatus, number> = { down: 0, unknown: 1, up: 2, none: 3 };
 
 function groupBySystem(records: SafeToolRecord[]): Grouped[] {
   const map = new Map<string, SafeToolRecord[]>();
@@ -35,12 +40,22 @@ function groupBySystem(records: SafeToolRecord[]): Grouped[] {
     );
 }
 
-function filterHref(query: string, status?: HealthStatus): string {
-  const params = new URLSearchParams();
-  if (query) params.set('q', query);
-  if (status) params.set('status', status);
-  const search = params.toString();
-  return search ? `/?${search}` : '/';
+function sortForDeck(records: SafeToolRecord[]): SafeToolRecord[] {
+  return [...records].sort((a, b) => {
+    const priority = DECK_PRIORITY[a.last_status] - DECK_PRIORITY[b.last_status];
+    if (priority !== 0) return priority;
+    const bySystem = a.system_name.localeCompare(b.system_name, 'ja');
+    return bySystem !== 0 ? bySystem : a.subcategory.localeCompare(b.subcategory, 'ja');
+  });
+}
+
+function hrefWith(params: { query: string; status?: HealthStatus; view: ViewMode }): string {
+  const search = new URLSearchParams();
+  if (params.query) search.set('q', params.query);
+  if (params.status) search.set('status', params.status);
+  if (params.view === 'list') search.set('view', 'list');
+  const qs = search.toString();
+  return qs ? `/?${qs}` : '/';
 }
 
 function isHealthStatus(value: string | undefined): value is HealthStatus {
@@ -50,12 +65,13 @@ function isHealthStatus(value: string | undefined): value is HealthStatus {
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; status?: string }>;
+  searchParams: Promise<{ q?: string; status?: string; view?: string }>;
 }) {
   const user = await requireUser();
-  const { q, status } = await searchParams;
+  const { q, status, view } = await searchParams;
   const query = q ?? '';
   const statusFilter = isHealthStatus(status) ? status : undefined;
+  const viewMode: ViewMode = view === 'list' ? 'list' : 'card';
 
   let all: SafeToolRecord[] = [];
   let loadError = '';
@@ -74,6 +90,7 @@ export default async function DashboardPage({
 
   const visible = statusFilter ? all.filter((record) => record.last_status === statusFilter) : all;
   const groups = groupBySystem(visible);
+  const deckRecords = sortForDeck(visible);
 
   return (
     <>
@@ -112,7 +129,9 @@ export default async function DashboardPage({
           </span>
           <span className="alert__body">
             <strong>{statusTotals.down} 件のツールが停止・エラーになっています</strong>
-            <Link href={filterHref(query, 'down')}>該当のツールを表示する</Link>
+            <Link href={hrefWith({ query, status: 'down', view: viewMode })}>
+              該当のツールを表示する
+            </Link>
           </span>
         </div>
       )}
@@ -120,7 +139,7 @@ export default async function DashboardPage({
       <div className="stat-grid">
         <Link
           className="stat"
-          href={filterHref(query)}
+          href={hrefWith({ query, view: viewMode })}
           aria-current={statusFilter === undefined ? 'true' : undefined}
         >
           <span className="stat__label">すべて</span>
@@ -130,7 +149,7 @@ export default async function DashboardPage({
           <Link
             className={`stat stat--${key}`}
             key={key}
-            href={filterHref(query, key)}
+            href={hrefWith({ query, status: key, view: viewMode })}
             aria-current={statusFilter === key ? 'true' : undefined}
           >
             <span className="stat__label">
@@ -144,6 +163,7 @@ export default async function DashboardPage({
 
       <form className="searchbar" method="get" role="search">
         {statusFilter && <input type="hidden" name="status" value={statusFilter} />}
+        {viewMode === 'list' && <input type="hidden" name="view" value="list" />}
         <div className="searchbar__input">
           <span className="searchbar__icon" aria-hidden="true">
             🔍
@@ -158,19 +178,35 @@ export default async function DashboardPage({
         </div>
         <button type="submit">検索</button>
         {(query || statusFilter) && (
-          <Link className="button button--ghost" href="/">
+          <Link className="button button--ghost" href={hrefWith({ query: '', view: viewMode })}>
             条件をクリア
           </Link>
         )}
       </form>
 
-      <p className="muted" style={{ marginBottom: 18 }}>
-        {visible.length} 件を表示
-        {query && `（「${query}」で検索）`}
-        {statusFilter && `（${STATUS_LABEL[statusFilter]}のみ）`}
-      </p>
+      <div className="row" style={{ justifyContent: 'space-between', marginBottom: 18 }}>
+        <p className="muted" style={{ margin: 0 }}>
+          {visible.length} 件を表示
+          {query && `（「${query}」で検索）`}
+          {statusFilter && `（${STATUS_LABEL[statusFilter]}のみ）`}
+        </p>
+        <nav className="view-switch" aria-label="表示の切り替え">
+          <Link
+            href={hrefWith({ query, status: statusFilter, view: 'card' })}
+            aria-current={viewMode === 'card' ? 'true' : undefined}
+          >
+            カード
+          </Link>
+          <Link
+            href={hrefWith({ query, status: statusFilter, view: 'list' })}
+            aria-current={viewMode === 'list' ? 'true' : undefined}
+          >
+            一覧
+          </Link>
+        </nav>
+      </div>
 
-      {groups.length === 0 && !loadError && (
+      {visible.length === 0 && !loadError && (
         <div className="empty">
           <span className="empty__icon" aria-hidden="true">
             {query || statusFilter ? '🔍' : '🗂'}
@@ -180,7 +216,7 @@ export default async function DashboardPage({
           </p>
           <p style={{ margin: 0 }}>
             {query || statusFilter ? (
-              <Link href="/">条件をクリアしてすべて表示する</Link>
+              <Link href={hrefWith({ query: '', view: viewMode })}>条件をクリアしてすべて表示する</Link>
             ) : canWrite(user) ? (
               <Link href="/new">最初のツールを登録する</Link>
             ) : (
@@ -190,44 +226,48 @@ export default async function DashboardPage({
         </div>
       )}
 
-      <div className="grid">
-        {groups.map((group) => (
-          <section className={`syscard${group.hasDown ? ' syscard--alert' : ''}`} key={group.systemName}>
-            <div className="syscard__head">
-              <div className="syscard__title">
-                {group.systemName}
-                <span className="syscard__meta" style={{ display: 'block' }}>
-                  {group.records.length} 件のツール / アカウント
-                </span>
+      {viewMode === 'card' ? (
+        <ToolDeck key={`${query}|${statusFilter ?? ''}|${deckRecords.length}`} records={deckRecords} />
+      ) : (
+        <div className="grid">
+          {groups.map((group) => (
+            <section className={`syscard${group.hasDown ? ' syscard--alert' : ''}`} key={group.systemName}>
+              <div className="syscard__head">
+                <div className="syscard__title">
+                  {group.systemName}
+                  <span className="syscard__meta" style={{ display: 'block' }}>
+                    {group.records.length} 件のツール / アカウント
+                  </span>
+                </div>
+                {group.hasDown && <span className="badge badge--down">要対応</span>}
               </div>
-              {group.hasDown && <span className="badge badge--down">要対応</span>}
-            </div>
-            <ul className="syscard__list">
-              {group.records.map((record) => (
-                <li key={record.id}>
-                  <Link className="tool-row" href={`/system/${record.id}`}>
-                    <span className="tool-row__dot" title={STATUS_LABEL[record.last_status]}>
-                      <span aria-hidden="true">{STATUS_ICON[record.last_status]}</span>
-                      <span className="sr-only">{STATUS_LABEL[record.last_status]}</span>
-                    </span>
-                    <span className="tool-row__body">
-                      <span className="tool-row__name">
-                        {record.subcategory || record.category || '(未分類)'}
+              <ul className="syscard__list">
+                {group.records.map((record) => (
+                  <li key={record.id}>
+                    <Link className="tool-row" href={`/system/${record.id}`}>
+                      <span className="tool-row__dot" title={STATUS_LABEL[record.last_status]}>
+                        <span aria-hidden="true">{STATUS_ICON[record.last_status]}</span>
+                        <span className="sr-only">{STATUS_LABEL[record.last_status]}</span>
                       </span>
-                      <span className="tool-row__sub">
-                        {record.google_account || record.category || '—'}
+                      <span className="tool-row__body">
+                        <span className="tool-row__name">
+                          {record.subcategory || record.category || '(未分類)'}
+                        </span>
+                        <span className="tool-row__sub">
+                          {record.google_account || record.category || '—'}
+                        </span>
                       </span>
-                    </span>
-                    <span className="tool-row__chevron" aria-hidden="true">
-                      ›
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </section>
-        ))}
-      </div>
+                      <span className="tool-row__chevron" aria-hidden="true">
+                        ›
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
+        </div>
+      )}
 
       {!loadError && all.length > 0 && (
         <p className="subtle" style={{ marginTop: 24 }}>

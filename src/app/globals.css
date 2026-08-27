@@ -1328,3 +1328,259 @@ code {
   border-radius: 5px;
   padding: 1px 5px;
 }
+
+/* =========================================================
+   カード送り表示（既定の一覧）
+   中央 1 件を実寸、前後 1 件ずつを薄く重ねる
+   ========================================================= */
+
+.view-switch {
+  display: inline-flex;
+  padding: 3px;
+  gap: 2px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: var(--r-full);
+  box-shadow: var(--shadow-sm);
+}
+.view-switch a {
+  padding: 6px 15px;
+  border-radius: var(--r-full);
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.view-switch a:hover {
+  background: var(--surface-3);
+  color: var(--text);
+  text-decoration: none;
+}
+.view-switch a[aria-current='true'] {
+  background: linear-gradient(180deg, var(--gold-light), var(--gold) 55%, var(--gold-deep));
+  color: var(--on-accent);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+.deck-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.deck-stage {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) 48px;
+  align-items: center;
+  gap: 14px;
+}
+
+.deck {
+  position: relative;
+  height: 452px;
+  touch-action: pan-y;
+  /* 前後のカードは画面幅からはみ出す分を切り落とす（横スクロールを出さない）。
+     中央カードの影が切れないよう、上下に余白を取ってから切る */
+  overflow: clip;
+}
+
+.deck-card {
+  position: absolute;
+  top: 22px;
+  left: 50%;
+  width: min(560px, 100%);
+  height: 408px;
+  margin-left: calc(min(560px, 100%) / -2);
+  display: flex;
+  flex-direction: column;
+  background-color: var(--surface);
+  background-image: var(--sheen);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  transition: transform 0.42s cubic-bezier(0.22, 0.68, 0.32, 1), opacity 0.42s ease, filter 0.42s ease;
+}
+.deck-card[data-pos='0'] {
+  transform: translateX(0) scale(1);
+  opacity: 1;
+  z-index: 3;
+  box-shadow: var(--shadow-lg);
+}
+.deck-card[data-pos='-1'] {
+  transform: translateX(-27%) scale(0.9) rotate(-2.2deg);
+  opacity: 0.38;
+  filter: saturate(0.45) blur(1.5px);
+  z-index: 2;
+}
+.deck-card[data-pos='1'] {
+  transform: translateX(27%) scale(0.9) rotate(2.2deg);
+  opacity: 0.38;
+  filter: saturate(0.45) blur(1.5px);
+  z-index: 2;
+}
+.deck-card[data-pos='hidden'] {
+  opacity: 0;
+  transform: scale(0.8);
+  z-index: 0;
+}
+.deck-card:not([data-pos='0']) {
+  pointer-events: none;
+}
+
+.deck-card__head {
+  position: relative;
+  padding: 18px 22px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.deck-card__head::after {
+  content: '';
+  position: absolute;
+  left: 22px;
+  right: 22px;
+  bottom: -1px;
+  height: 1px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--gold) 70%, transparent), transparent 72%);
+}
+.deck-card__mark {
+  width: 44px;
+  height: 44px;
+  flex: none;
+  border-radius: var(--r-md);
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--on-accent);
+  background: linear-gradient(140deg, var(--gold-light), var(--gold) 55%, var(--gold-deep));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+.deck-card__title {
+  flex: 1;
+  min-width: 0;
+}
+.deck-card__system {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 19px;
+  letter-spacing: 0.03em;
+  line-height: 1.4;
+  word-break: break-word;
+}
+.deck-card__account {
+  color: var(--text-subtle);
+  font-size: 12.5px;
+  word-break: break-all;
+}
+
+.deck-card__body {
+  flex: 1;
+  padding: 6px 22px;
+  overflow-y: auto;
+}
+.deck-card__body .detail-item {
+  grid-template-columns: minmax(120px, 150px) 1fr;
+  padding: 10px 0;
+}
+
+.deck-card__foot {
+  padding: 13px 22px 16px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.deck-card__when {
+  margin-left: auto;
+  color: var(--text-subtle);
+  font-size: 12px;
+}
+
+.deck-arrow {
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--gold) 55%, var(--border-strong));
+  background: var(--surface);
+  color: var(--accent);
+  font-size: 19px;
+  line-height: 1;
+  box-shadow: var(--shadow-sm);
+}
+.deck-arrow:hover {
+  background: var(--accent-soft);
+}
+
+.deck-rail {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.deck-dots {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.deck-dot {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid var(--border-strong);
+  background: transparent;
+  box-shadow: none;
+}
+.deck-dot:hover {
+  background: var(--accent-soft);
+}
+.deck-dot[aria-current='true'] {
+  background: linear-gradient(180deg, var(--gold-light), var(--gold-deep));
+  border-color: transparent;
+  transform: scale(1.35);
+}
+.deck-counter {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.deck-hint {
+  margin: 0;
+  text-align: center;
+  color: var(--text-subtle);
+  font-size: 12.5px;
+}
+
+@media (max-width: 620px) {
+  .deck-stage {
+    grid-template-columns: 1fr;
+  }
+  .deck-arrow {
+    display: none;
+  }
+  .deck {
+    height: 560px;
+  }
+  .deck-card {
+    height: 516px;
+  }
+  .deck-card__head,
+  .deck-card__foot {
+    padding-inline: 18px;
+  }
+  .deck-card__body {
+    padding-inline: 18px;
+  }
+  .deck-card__body .detail-item {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+}

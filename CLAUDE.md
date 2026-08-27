@@ -91,6 +91,7 @@
 
 - **down 通知**：`/api/patrol` で状態が変化したもの（up/unknown → down、down → up）だけを `NOTIFY_WEBHOOK_URL` へ通知する。Slack/Discord 両対応（`text` と `content` を同時に送る）。未設定・送信失敗でも監視の記録は完了させる。通知に機密値は含めない。
 - **権限分離**：`role` 列を実際に使う。判定は `src/lib/permissions.ts` に集約し、API（403）と画面（導線を出さない・`requireAdmin` でリダイレクト）の両方で同じ関数を使う。viewer は閲覧・検索・現場サポートのみ。
+- **一覧の既定表示はカード送り**（`src/components/ToolDeck.tsx`）：中央に 1 件、前後を薄く重ねて表示し、左右ボタン・矢印キー・スワイプで送る。カードは**ツール 1 件**単位で、対応が必要な順（down → unknown → up → none）に並べる。`?view=list` でシステム単位のカード一覧に切り替えでき、検索語・ステータス絞り込みは切り替えをまたいで保持する。カード上でも機密値は初期表示に含めず、`SecretValue` 経由で押されたときだけ復号する。
 
 ---
 

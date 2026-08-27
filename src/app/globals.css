@@ -592,11 +592,13 @@ h3 {
   gap: 10px;
   margin-bottom: 14px;
   flex-wrap: wrap;
+  /* 画面いっぱいに伸ばさない（入力するのは短い語なので） */
+  max-width: 560px;
 }
 .searchbar__input {
   position: relative;
-  flex: 1;
-  min-width: 240px;
+  flex: 1 1 240px;
+  min-width: 0;
   display: flex;
   align-items: center;
 }
@@ -1583,4 +1585,221 @@ code {
     grid-template-columns: 1fr;
     gap: 2px;
   }
+}
+
+/* =========================================================
+   ヘッダーの通知（停止・エラー）
+   ========================================================= */
+
+.notify {
+  position: relative;
+  display: inline-flex;
+}
+.notify__button {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: var(--r-full);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: 15px;
+  line-height: 1;
+  box-shadow: none;
+}
+.notify__button:hover {
+  background: var(--surface-2);
+  border-color: var(--border-strong);
+}
+.notify__button--alert {
+  border-color: color-mix(in srgb, var(--down) 45%, transparent);
+  background: var(--down-soft);
+}
+.notify__count {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: var(--r-full);
+  background: var(--down);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.notify__panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 30;
+  width: min(340px, calc(100vw - 32px));
+  background-color: var(--surface);
+  background-image: var(--sheen);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+.notify__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.notify__empty {
+  margin: 0;
+  padding: 18px 14px;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.7;
+}
+.notify__list {
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+.notify__item {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 9px 10px;
+  border-radius: var(--r-sm);
+  color: var(--text);
+}
+.notify__item:hover {
+  background: var(--surface-2);
+  text-decoration: none;
+}
+.notify__item-dot {
+  font-size: 10px;
+  line-height: 1.8;
+}
+.notify__item-body {
+  min-width: 0;
+}
+.notify__item-title {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 600;
+  word-break: break-word;
+}
+.notify__item-meta {
+  display: block;
+  color: var(--text-subtle);
+  font-size: 11.5px;
+}
+.notify__all {
+  display: block;
+  padding: 11px 14px;
+  border-top: 1px solid var(--border);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* =========================================================
+   状態でしぼり込むメニュー（右上・ホバーで縦に開く）
+   ========================================================= */
+
+.status-menu {
+  position: relative;
+  display: inline-flex;
+}
+.status-menu__button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 38px;
+  padding: 0 12px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 14px;
+  box-shadow: none;
+}
+.status-menu__button:hover {
+  background: var(--surface-2);
+  border-color: color-mix(in srgb, var(--gold) 60%, var(--border-strong));
+}
+.status-menu__caret {
+  color: var(--text-subtle);
+  font-size: 10px;
+}
+
+.status-menu__list {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 30;
+  min-width: 220px;
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  background-color: var(--surface);
+  background-image: var(--sheen);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-lg);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+  transition: opacity 0.14s ease, transform 0.14s ease, visibility 0.14s;
+}
+/* カーソルを合わせる／キーボードで触れると開く。
+   ボタンとメニューの間に隙間があると閉じてしまうため、当たり判定を伸ばしておく */
+.status-menu::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 100%;
+  height: 10px;
+}
+.status-menu:hover .status-menu__list,
+.status-menu:focus-within .status-menu__list {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.status-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 10px;
+  border-radius: var(--r-sm);
+  color: var(--text);
+  font-size: 13.5px;
+}
+.status-menu__item:hover {
+  background: var(--surface-2);
+  text-decoration: none;
+}
+.status-menu__item[aria-current='true'] {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 700;
+}
+.status-menu__label {
+  flex: 1;
+}
+.status-menu__count {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.status-menu__item[aria-current='true'] .status-menu__count {
+  color: var(--accent);
 }

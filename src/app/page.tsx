@@ -3,6 +3,7 @@ import { requireUser } from '@/lib/session';
 import { canWrite } from '@/lib/permissions';
 import { searchRecords, toSafeRecord } from '@/lib/records';
 import StatusPill from '@/components/StatusPill';
+import StatusMenu, { buildStatusMenu } from '@/components/StatusMenu';
 import ToolDeck from '@/components/ToolDeck';
 import { STATUS_ICON, STATUS_LABEL, type HealthStatus, type SafeToolRecord } from '@/lib/types';
 
@@ -18,7 +19,6 @@ type Grouped = {
   hasDown: boolean;
 };
 
-const STATUS_ORDER: HealthStatus[] = ['up', 'down', 'unknown', 'none'];
 /** カードで先に出す順（対応が必要なものから） */
 const DECK_PRIORITY: Record<HealthStatus, number> = { down: 0, unknown: 1, up: 2, none: 3 };
 
@@ -101,13 +101,19 @@ export default async function DashboardPage({
             システム名・Google アカウント・ツール名・追加項目を横断検索します（機密値は検索対象外）。
           </p>
         </div>
-        {canWrite(user) && (
-          <div className="page-head__actions">
+        <div className="page-head__actions">
+          <StatusMenu
+            items={buildStatusMenu(statusTotals, all.length, (target) =>
+              hrefWith({ query, status: target, view: viewMode }),
+            )}
+            current={statusFilter}
+          />
+          {canWrite(user) && (
             <Link className="button" href="/new">
               ＋ 新規登録
             </Link>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {loadError && (
@@ -121,45 +127,6 @@ export default async function DashboardPage({
           </span>
         </div>
       )}
-
-      {statusTotals.down > 0 && (
-        <div className="alert">
-          <span className="alert__icon" aria-hidden="true">
-            🔴
-          </span>
-          <span className="alert__body">
-            <strong>{statusTotals.down} 件のツールが停止・エラーになっています</strong>
-            <Link href={hrefWith({ query, status: 'down', view: viewMode })}>
-              該当のツールを表示する
-            </Link>
-          </span>
-        </div>
-      )}
-
-      <div className="stat-grid">
-        <Link
-          className="stat"
-          href={hrefWith({ query, view: viewMode })}
-          aria-current={statusFilter === undefined ? 'true' : undefined}
-        >
-          <span className="stat__label">すべて</span>
-          <span className="stat__value">{all.length}</span>
-        </Link>
-        {STATUS_ORDER.map((key) => (
-          <Link
-            className={`stat stat--${key}`}
-            key={key}
-            href={hrefWith({ query, status: key, view: viewMode })}
-            aria-current={statusFilter === key ? 'true' : undefined}
-          >
-            <span className="stat__label">
-              <span aria-hidden="true">{STATUS_ICON[key]}</span>
-              {STATUS_LABEL[key]}
-            </span>
-            <span className="stat__value">{statusTotals[key]}</span>
-          </Link>
-        ))}
-      </div>
 
       <form className="searchbar" method="get" role="search">
         {statusFilter && <input type="hidden" name="status" value={statusFilter} />}

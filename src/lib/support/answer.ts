@@ -60,10 +60,13 @@ async function statusContext(query: string): Promise<string> {
   try {
     const records = await listRecords();
     const normalized = query.toLowerCase();
+    // 空文字は includes() が常に true になるため、値のある項目だけで判定する
+    const mentions = (value: string) => {
+      const target = value.trim().toLowerCase();
+      return target.length > 0 && normalized.includes(target);
+    };
     const related = records.filter(
-      (record) =>
-        normalized.includes(record.subcategory.toLowerCase()) ||
-        normalized.includes(record.system_name.toLowerCase()),
+      (record) => mentions(record.subcategory) || mentions(record.system_name),
     );
     const target = (related.length > 0 ? related : records).slice(0, 12);
     if (target.length === 0) return '';

@@ -45,10 +45,15 @@ export async function addMasterEntry(entry: {
     (entry.google_account && !current.googleAccounts.includes(entry.google_account.trim()));
   if (!isNew) return;
 
-  await appendRow(env.tabs.master, [
-    entry.category?.trim() ?? '',
-    entry.subcategory?.trim() ?? '',
-    entry.google_account?.trim() ?? '',
-  ]);
+  // 列の並び替えに耐えるよう、シートの実際のヘッダーに合わせて値を配置する
+  const { headers } = await readTable(env.tabs.master);
+  const values: Record<string, string> = {
+    category: entry.category?.trim() ?? '',
+    subcategory: entry.subcategory?.trim() ?? '',
+    google_account: entry.google_account?.trim() ?? '',
+  };
+  const columns = headers.length > 0 ? headers : ['category', 'subcategory', 'google_account'];
+
+  await appendRow(env.tabs.master, columns.map((header) => values[header] ?? ''));
   invalidateMasterCache();
 }

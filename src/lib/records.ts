@@ -315,6 +315,17 @@ export async function updateRecord(
     if (previous) nextDetails[field.key] = previous;
   }
 
+  // フィールド定義に無い既存キー（定義変更前に登録された項目など）は、
+  // 編集フォームに出ないため送られてこない。黙って失わないよう引き継ぐ。
+  const schemaKeys = new Set(getFieldSchema(input.subcategory).map((field) => field.key));
+  const sameSubcategory = existing.subcategory.trim() === input.subcategory.trim();
+  if (sameSubcategory) {
+    for (const [key, value] of Object.entries(existing.details)) {
+      if (schemaKeys.has(key) || clearKeys.has(key) || !value) continue;
+      if (nextDetails[key] === undefined) nextDetails[key] = value;
+    }
+  }
+
   const updated: ToolRecord = {
     ...existing,
     system_name: input.system_name.trim(),

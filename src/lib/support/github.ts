@@ -35,7 +35,7 @@ function headers(): Record<string, string> {
  * include パターンの簡易マッチ。
  * `README.md`（完全一致）、`docs/*.md`（1 階層）、`docs/**` や `docs/**\/*.md`（再帰）に対応する。
  */
-function matchesInclude(filePath: string, patterns?: string[]): boolean {
+export function matchesInclude(filePath: string, patterns?: string[]): boolean {
   if (!patterns || patterns.length === 0) return true;
   const GLOBSTAR_SLASH = '@@GLOBSTAR_SLASH@@';
   const GLOBSTAR = '@@GLOBSTAR@@';

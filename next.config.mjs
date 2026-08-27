@@ -5,8 +5,24 @@ const nextConfig = {
   outputFileTracingIncludes: {
     '/**': ['./knowledge/**/*'],
   },
-  // ヘルスチェック URL への外部通信以外は行わない。
   poweredByHeader: false,
+
+  // 認証情報を扱う画面のため、基本的な防御ヘッダーを付ける（クリックジャッキング・情報漏れ対策）
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'no-referrer' },
+          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+          // 詳細ページに復号済みの値が出るため、ブラウザ・中間キャッシュに残さない
+          { key: 'Cache-Control', value: 'no-store, max-age=0' },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;

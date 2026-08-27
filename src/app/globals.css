@@ -1,50 +1,65 @@
 /* =========================================================
    デザイントークン
-   現場スタッフが迷わないことを優先し、色数を絞って
-   「状態（🟢🔴🟡⚪）」だけが目立つ配色にしている。
+   白・シルバー・黒・ゴールドの 4 色構成。
+   ゴールドは差し色（操作できる場所）だけに使い、
+   状態表示（🟢🔴🟡⚪）は意味の色を保って見分けを優先する。
    ========================================================= */
 
 :root {
   color-scheme: light;
 
-  --bg: #f3f5f9;
-  --bg-grad: radial-gradient(1200px 600px at 15% -10%, #e7edfb 0%, rgba(231, 237, 251, 0) 60%);
+  /* 白 × シルバー × ゴールド。地は白〜シルバー、罫線はシルバー、
+     差し色だけをゴールドにして品を保つ */
+  --bg: #f5f6f7;
+  --bg-grad: radial-gradient(1100px 560px at 12% -12%, #e9ebee 0%, rgba(233, 235, 238, 0) 62%);
   --surface: #ffffff;
-  --surface-2: #f5f7fb;
-  --surface-3: #eceff6;
-  --border: #e0e5ee;
-  --border-strong: #c9d1de;
+  --surface-2: #f4f5f7;
+  --surface-3: #e9ebef;
+  --border: #e1e3e8;
+  --border-strong: #c6cad2;
 
-  --text: #101722;
-  --text-muted: #5b6675;
-  --text-subtle: #8590a0;
+  --text: #16181c;
+  --text-muted: #575c65;
+  --text-subtle: #6b717a;
 
-  --accent: #2563eb;
-  --accent-hover: #1d4ed8;
-  --accent-soft: #e8efff;
-  --accent-ring: rgba(37, 99, 235, 0.35);
+  /* ゴールド */
+  --gold: #b8912f;
+  --gold-light: #e2c46e;
+  --gold-deep: #8a6a12;
 
-  --ok: #15803d;
-  --ok-soft: #e6f5ec;
-  --down: #c62828;
-  --down-soft: #fdecec;
-  --warn: #b45309;
-  --warn-soft: #fdf2e3;
-  --idle: #6b7684;
-  --idle-soft: #eef1f5;
-  --danger: #c62828;
+  --accent: #8a6a12;
+  --accent-hover: #6d520c;
+  --accent-soft: #faf6ea;
+  --accent-ring: rgba(184, 145, 47, 0.42);
+  --on-accent: #1c1608;
+
+  --ok: #1f6b41;
+  --ok-soft: #e9f4ee;
+  --down: #a52a25;
+  --down-soft: #fbeceb;
+  --warn: #8f6209;
+  --warn-soft: #f9f1dd;
+  --idle: #75726a;
+  --idle-soft: #eef0f3;
+  --danger: #a52a25;
 
   --r-sm: 8px;
   --r-md: 12px;
   --r-lg: 16px;
   --r-full: 999px;
 
-  --shadow-sm: 0 1px 2px rgba(16, 23, 34, 0.06), 0 1px 3px rgba(16, 23, 34, 0.05);
-  --shadow-md: 0 4px 14px rgba(16, 23, 34, 0.08);
-  --shadow-lg: 0 12px 32px rgba(16, 23, 34, 0.12);
+  /* 面の上端に、シルバーのごく淡い光沢 */
+  --sheen: linear-gradient(180deg, rgba(140, 150, 165, 0.05), rgba(140, 150, 165, 0) 96px);
+
+  --shadow-sm: 0 1px 2px rgba(20, 24, 32, 0.05), 0 1px 3px rgba(20, 24, 32, 0.04);
+  --shadow-md: 0 6px 20px rgba(20, 24, 32, 0.09);
+  --shadow-lg: 0 18px 44px rgba(20, 24, 32, 0.15);
 
   --font: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Noto Sans JP', 'Yu Gothic UI', Meiryo,
     'Segoe UI', sans-serif;
+  /* 見出しは明朝で品を出す（OS 標準のみ・追加読み込みなし） */
+  --font-display: 'Hiragino Mincho ProN', 'Yu Mincho', YuMincho, 'Noto Serif JP', 'Times New Roman',
+    serif;
   --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
 
   --header-h: 60px;
@@ -55,36 +70,44 @@
   :root {
     color-scheme: dark;
 
-    --bg: #0e1218;
-    --bg-grad: radial-gradient(1200px 600px at 15% -10%, #16202f 0%, rgba(22, 32, 47, 0) 60%);
-    --surface: #161b23;
-    --surface-2: #1c222c;
-    --surface-3: #232a35;
-    --border: #2a323e;
-    --border-strong: #3a4453;
+    /* 黒 × シルバー × ゴールド */
+    --bg: #0a0a0b;
+    --bg-grad: radial-gradient(1100px 560px at 12% -12%, #17150e 0%, rgba(23, 21, 14, 0) 62%);
+    --surface: #131316;
+    --surface-2: #18181b;
+    --surface-3: #202024;
+    --border: #2b2b30;
+    --border-strong: #3f3f46;
 
-    --text: #e7ebf2;
-    --text-muted: #9aa5b4;
-    --text-subtle: #7c8797;
+    --text: #ececee;
+    --text-muted: #a5a49e;
+    --text-subtle: #86857f;
 
-    --accent: #6ea8ff;
-    --accent-hover: #8bbaff;
-    --accent-soft: #16243a;
-    --accent-ring: rgba(110, 168, 255, 0.4);
+    --gold: #d4af37;
+    --gold-light: #f0d894;
+    --gold-deep: #a4801f;
 
-    --ok: #4ade80;
-    --ok-soft: #12261a;
-    --down: #ff8578;
-    --down-soft: #2b1717;
-    --warn: #e8b563;
-    --warn-soft: #2a2113;
-    --idle: #98a2b0;
-    --idle-soft: #1e242e;
-    --danger: #ff8578;
+    --accent: #e0c068;
+    --accent-hover: #f0d894;
+    --accent-soft: #241f12;
+    --accent-ring: rgba(224, 192, 104, 0.38);
+    --on-accent: #1c1608;
 
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
-    --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.45);
-    --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.55);
+    --ok: #63c68a;
+    --ok-soft: #12251a;
+    --down: #ff8a7a;
+    --down-soft: #2a1615;
+    --warn: #e3b862;
+    --warn-soft: #29200f;
+    --idle: #9a9992;
+    --idle-soft: #1d1d21;
+    --danger: #ff8a7a;
+
+    --sheen: linear-gradient(180deg, rgba(224, 192, 104, 0.06), rgba(224, 192, 104, 0) 96px);
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.55);
+    --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.6);
+    --shadow-lg: 0 18px 44px rgba(0, 0, 0, 0.7);
   }
 }
 
@@ -146,6 +169,24 @@ a:hover {
   backdrop-filter: saturate(180%) blur(12px);
   border-bottom: 1px solid var(--border);
 }
+/* 下端にゴールドのヘアライン */
+.app-header::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--gold) 55%, transparent) 22%,
+    color-mix(in srgb, var(--gold) 75%, transparent) 50%,
+    color-mix(in srgb, var(--gold) 55%, transparent) 78%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
 
 .app-header__inner {
   max-width: var(--content-w);
@@ -174,14 +215,15 @@ a:hover {
   border-radius: 9px;
   display: grid;
   place-items: center;
-  color: #fff;
+  color: var(--on-accent);
   font-size: 15px;
-  background: linear-gradient(140deg, #3b82f6, #2563eb 55%, #1e40af);
-  box-shadow: var(--shadow-sm);
+  background: linear-gradient(140deg, var(--gold-light), var(--gold) 52%, var(--gold-deep));
+  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.45);
 }
 .brand__text {
-  font-size: 15px;
-  letter-spacing: 0.01em;
+  font-family: var(--font-display);
+  font-size: 16px;
+  letter-spacing: 0.06em;
 }
 .brand__sub {
   display: block;
@@ -244,8 +286,8 @@ a:hover {
   border-radius: var(--r-full);
   display: grid;
   place-items: center;
-  background: var(--accent-soft);
-  color: var(--accent);
+  background: linear-gradient(140deg, var(--gold-light), var(--gold-deep));
+  color: var(--on-accent);
   font-weight: 700;
   font-size: 12px;
   text-transform: uppercase;
@@ -299,13 +341,18 @@ main {
    ========================================================= */
 
 h1 {
-  font-size: 25px;
-  line-height: 1.4;
-  letter-spacing: -0.01em;
+  font-family: var(--font-display);
+  font-size: 27px;
+  line-height: 1.45;
+  letter-spacing: 0.02em;
+  font-weight: 600;
   margin: 0 0 6px;
 }
 h2 {
-  font-size: 18px;
+  font-family: var(--font-display);
+  font-size: 19px;
+  letter-spacing: 0.02em;
+  font-weight: 600;
   margin: 32px 0 12px;
 }
 h3 {
@@ -351,7 +398,8 @@ h3 {
 }
 
 .card {
-  background: var(--surface);
+  background-color: var(--surface);
+  background-image: var(--sheen);
   border: 1px solid var(--border);
   border-radius: var(--r-lg);
   padding: 18px 20px;
@@ -362,16 +410,33 @@ h3 {
   overflow: hidden;
 }
 .card__head {
-  padding: 14px 20px;
+  position: relative;
+  padding: 15px 20px;
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
   gap: 10px;
 }
+/* 見出し下に控えめなゴールドの線を重ねる */
+.card__head::after {
+  content: '';
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  bottom: -1px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--gold) 70%, transparent),
+    color-mix(in srgb, var(--gold) 20%, transparent) 45%,
+    transparent 80%
+  );
+}
 .card__head h2,
 .card__head h3 {
   margin: 0;
-  font-size: 15px;
+  font-size: 16px;
+  letter-spacing: 0.04em;
 }
 .card__body {
   padding: 16px 20px;
@@ -474,7 +539,8 @@ h3 {
 .stat {
   display: block;
   text-align: left;
-  background: var(--surface);
+  background-color: var(--surface);
+  background-image: var(--sheen);
   border: 1px solid var(--border);
   border-radius: var(--r-md);
   padding: 13px 15px;
@@ -486,10 +552,10 @@ h3 {
   text-decoration: none;
   transform: translateY(-1px);
   box-shadow: var(--shadow-md);
-  border-color: var(--border-strong);
+  border-color: color-mix(in srgb, var(--gold) 45%, var(--border-strong));
 }
 .stat[aria-current='true'] {
-  border-color: var(--accent);
+  border-color: var(--gold);
   box-shadow: 0 0 0 3px var(--accent-ring);
 }
 .stat__label {
@@ -501,10 +567,11 @@ h3 {
   font-weight: 600;
 }
 .stat__value {
-  font-size: 26px;
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 600;
   line-height: 1.25;
-  letter-spacing: -0.02em;
+  letter-spacing: 0.01em;
 }
 .stat--up .stat__value {
   color: var(--ok);
@@ -565,7 +632,8 @@ h3 {
 .syscard {
   display: flex;
   flex-direction: column;
-  background: var(--surface);
+  background-color: var(--surface);
+  background-image: var(--sheen);
   border: 1px solid var(--border);
   border-radius: var(--r-lg);
   box-shadow: var(--shadow-sm);
@@ -574,21 +642,37 @@ h3 {
 }
 .syscard:hover {
   box-shadow: var(--shadow-md);
-  border-color: var(--border-strong);
+  border-color: color-mix(in srgb, var(--gold) 45%, var(--border-strong));
 }
 .syscard--alert {
   border-color: color-mix(in srgb, var(--down) 45%, var(--border));
 }
 .syscard__head {
+  position: relative;
   padding: 14px 16px 12px;
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: flex-start;
   gap: 10px;
 }
+.syscard__head::after {
+  content: '';
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: -1px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--gold) 60%, transparent),
+    transparent 70%
+  );
+}
 .syscard__title {
-  font-weight: 700;
-  font-size: 15.5px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 16.5px;
+  letter-spacing: 0.02em;
   line-height: 1.45;
   flex: 1;
   word-break: break-word;
@@ -662,10 +746,11 @@ h3 {
   border-radius: var(--r-md);
   display: grid;
   place-items: center;
-  background: var(--accent-soft);
-  color: var(--accent);
+  background: linear-gradient(140deg, var(--gold-light), var(--gold) 55%, var(--gold-deep));
+  color: var(--on-accent);
   font-size: 20px;
   font-weight: 700;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
 }
 .detail-hero__body {
   flex: 1;
@@ -832,9 +917,10 @@ button,
   gap: 6px;
   padding: 10px 18px;
   border-radius: var(--r-sm);
-  border: 1px solid transparent;
-  background: var(--accent);
-  color: #fff;
+  border: 1px solid color-mix(in srgb, var(--gold-deep) 55%, transparent);
+  background: linear-gradient(180deg, var(--gold-light), var(--gold) 55%, var(--gold-deep));
+  color: var(--on-accent);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
   font-size: 14px;
   font-weight: 600;
   font-family: inherit;
@@ -844,7 +930,7 @@ button,
 }
 button:hover,
 .button:hover {
-  background: var(--accent-hover);
+  background: linear-gradient(180deg, var(--gold-light), var(--gold-light) 45%, var(--gold));
   text-decoration: none;
 }
 button:active,
@@ -862,16 +948,18 @@ button:disabled,
   background: var(--surface);
   border-color: var(--border-strong);
   color: var(--text);
+  box-shadow: none;
 }
 .button--ghost:hover {
   background: var(--surface-2);
-  border-color: var(--text-subtle);
+  border-color: color-mix(in srgb, var(--gold) 60%, var(--border-strong));
 }
 .button--quiet {
   background: transparent;
   border-color: transparent;
   color: var(--accent);
   padding-inline: 10px;
+  box-shadow: none;
 }
 .button--quiet:hover {
   background: var(--accent-soft);
@@ -880,6 +968,7 @@ button:disabled,
   background: transparent;
   border-color: color-mix(in srgb, var(--danger) 45%, transparent);
   color: var(--danger);
+  box-shadow: none;
 }
 .button--danger:hover {
   background: var(--down-soft);
@@ -1106,9 +1195,13 @@ button:disabled,
   font-weight: 500;
 }
 .suggestion:hover {
-  background: var(--surface-2);
-  border-color: var(--accent);
+  background: var(--accent-soft);
+  border-color: color-mix(in srgb, var(--gold) 70%, transparent);
   color: var(--accent);
+  box-shadow: none;
+}
+.suggestion {
+  box-shadow: none;
 }
 
 .composer {
@@ -1185,6 +1278,9 @@ pre.draft {
   max-width: 400px;
   margin: 10vh auto 0;
 }
+.login-brand h1 {
+  letter-spacing: 0.08em;
+}
 .login-brand {
   display: flex;
   flex-direction: column;
@@ -1200,9 +1296,9 @@ pre.draft {
   display: grid;
   place-items: center;
   font-size: 24px;
-  color: #fff;
-  background: linear-gradient(140deg, #3b82f6, #2563eb 55%, #1e40af);
-  box-shadow: var(--shadow-md);
+  color: var(--on-accent);
+  background: linear-gradient(140deg, var(--gold-light), var(--gold) 52%, var(--gold-deep));
+  box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 .login-wrap .card {
   box-shadow: var(--shadow-lg);

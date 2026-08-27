@@ -2,6 +2,7 @@ import { getIronSession, type SessionOptions } from 'iron-session';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { env } from './env';
+import { canWrite } from './permissions';
 import type { AppUser } from './types';
 
 /** iron-session による署名付き HTTP-only Cookie（要件定義書 §5） */
@@ -44,4 +45,11 @@ export async function requireUser(): Promise<AppUser> {
 /** API 用：未認証なら null を返す（呼び出し側で 401） */
 export async function requireApiUser(): Promise<AppUser | null> {
   return getCurrentUser();
+}
+
+/** ページ用：admin でなければ一覧へ戻す */
+export async function requireAdmin(): Promise<AppUser> {
+  const user = await requireUser();
+  if (!canWrite(user)) redirect('/');
+  return user;
 }

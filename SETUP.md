@@ -28,7 +28,8 @@ Claude Code はアプリのコードと `.env.example` までは作れるが、*
 
 3. スプレッドシート右上の「共有」から、**手順2のサービスアカウントのメールを「編集者」で追加**する。人間アカウント以外はこのサービスアカウントのみに絞る。
 4. URL の `/d/` と `/edit` の間にある **スプレッドシート ID** を控える。
-5. **初期ユーザー**：`users` タブは当面ヘッダーのみでよい。ログインパスワードは平文で入れず、フェーズ2実装後にハッシュ生成用の簡易スクリプト（bcrypt/argon2）で `password_hash` を作って1行追加する（Claude Code にスクリプト作成を依頼できる）。
+5. **初期ユーザー**：`users` タブは当面ヘッダーのみでよい。ログインパスワードは平文で入れず、`npm run hash-password` で `password_hash` を作って1行追加する。
+6. **権限**：`role` 列には `admin`（登録・編集・削除ができる）か `viewer`（閲覧・検索・現場サポートのみ）を入れる。現場スタッフには `viewer` を渡す運用を推奨。
 
 ## 4. シークレットの生成
 
@@ -55,6 +56,7 @@ openssl rand -hex 32
 | `ENCRYPTION_KEY` | 手順4の暗号化鍵 |
 | `SESSION_SECRET` | 手順4のセッションシークレット |
 | `CRON_SECRET` | 手順4のスケジューラ用トークン（`/api/patrol`・`/api/support/sync` 保護用） |
+| `NOTIFY_WEBHOOK_URL` | 任意。ツールが down / 復旧したときの通知先（Slack・Discord の Incoming Webhook）。未設定なら通知せず記録・表示のみ |
 
 ### 現場サポートモード用（任意）
 

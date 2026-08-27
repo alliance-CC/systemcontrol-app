@@ -87,10 +87,15 @@
 
 ---
 
+## 実装済みの fast-follow
+
+- **down 通知**：`/api/patrol` で状態が変化したもの（up/unknown → down、down → up）だけを `NOTIFY_WEBHOOK_URL` へ通知する。Slack/Discord 両対応（`text` と `content` を同時に送る）。未設定・送信失敗でも監視の記録は完了させる。通知に機密値は含めない。
+- **権限分離**：`role` 列を実際に使う。判定は `src/lib/permissions.ts` に集約し、API（403）と画面（導線を出さない・`requireAdmin` でリダイレクト）の両方で同じ関数を使う。viewer は閲覧・検索・現場サポートのみ。
+
+---
+
 ## v1 のスコープ外（将来）
 
-- ツールが down に変化した際の Webhook 通知連動（実装容易な fast-follow）。
-- 権限分離の実運用（v1 は全員 admin。`role` 列は用意済み）。
 - ステータス保存の KV 化（性能が必要になったら）。
 - 現場サポートモードの検索精度向上（ベクトル検索・埋め込みの導入）。v1 はキーワード検索で運用し、質問ログを見てから判断する。
 - 依頼文からの GitHub Issue 自動起票（v1 は Issue 作成画面へのリンクまで）。

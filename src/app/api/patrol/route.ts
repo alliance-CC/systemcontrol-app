@@ -29,9 +29,16 @@ async function handle(request: NextRequest) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
   try {
-    const { checked, results } = await runPatrol();
+    const { checked, results, notified } = await runPatrol();
     const down = results.filter((result) => result.status === 'down').length;
-    return NextResponse.json({ checked, down, checkedAt: new Date().toISOString() });
+    const changed = results.filter((result) => result.previous !== result.status).length;
+    return NextResponse.json({
+      checked,
+      down,
+      changed,
+      notified: notified.sent,
+      checkedAt: new Date().toISOString(),
+    });
   } catch {
     return NextResponse.json({ error: 'patrol failed' }, { status: 500 });
   }

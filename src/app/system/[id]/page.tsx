@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireUser } from '@/lib/session';
+import { canWrite } from '@/lib/permissions';
 import { getRecord, toSafeRecord } from '@/lib/records';
 import { STATUS_ICON, STATUS_LABEL } from '@/lib/types';
 import SecretValue from '@/components/SecretValue';
@@ -11,7 +12,7 @@ import DeleteButton from '@/components/DeleteButton';
 export const dynamic = 'force-dynamic';
 
 export default async function SystemDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  await requireUser();
+  const user = await requireUser();
   const { id } = await params;
 
   let record;
@@ -74,10 +75,14 @@ export default async function SystemDetailPage({ params }: { params: Promise<{ i
         </div>
 
         <div className="actions">
-          <Link className="button" href={`/system/${safe.id}/edit`}>
-            編集する
-          </Link>
-          <DeleteButton recordId={safe.id} systemName={safe.system_name} />
+          {canWrite(user) && (
+            <>
+              <Link className="button" href={`/system/${safe.id}/edit`}>
+                編集する
+              </Link>
+              <DeleteButton recordId={safe.id} systemName={safe.system_name} />
+            </>
+          )}
           <Link className="button button--ghost" href={`/support?tool=${encodeURIComponent(safe.subcategory)}`}>
             このツールについて質問する
           </Link>

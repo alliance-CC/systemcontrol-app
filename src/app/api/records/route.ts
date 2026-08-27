@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { requireApiUser } from '@/lib/session';
+import { canWrite, WRITE_DENIED_MESSAGE } from '@/lib/permissions';
 import { createRecord, searchRecords, toSafeRecord, validateRecord, type RecordInput } from '@/lib/records';
 import { addMasterEntry } from '@/lib/master';
 
@@ -38,6 +39,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const user = await requireApiUser();
   if (!user) return NextResponse.json({ error: 'ログインが必要です。' }, { status: 401 });
+  if (!canWrite(user)) return NextResponse.json({ error: WRITE_DENIED_MESSAGE }, { status: 403 });
 
   let body: Record<string, unknown>;
   try {

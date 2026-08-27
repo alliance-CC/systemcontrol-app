@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { requireApiUser } from '@/lib/session';
+import { canWrite, WRITE_DENIED_MESSAGE } from '@/lib/permissions';
 import { getRecord, removeRecord, toSafeRecord, updateRecord, validateRecord, type RecordInput } from '@/lib/records';
 
 export const dynamic = 'force-dynamic';
@@ -39,6 +40,7 @@ export async function GET(_request: NextRequest, { params }: Params) {
 export async function PUT(request: NextRequest, { params }: Params) {
   const user = await requireApiUser();
   if (!user) return NextResponse.json({ error: 'ログインが必要です。' }, { status: 401 });
+  if (!canWrite(user)) return NextResponse.json({ error: WRITE_DENIED_MESSAGE }, { status: 403 });
 
   const { id } = await params;
   let body: Record<string, unknown>;
@@ -64,6 +66,7 @@ export async function PUT(request: NextRequest, { params }: Params) {
 export async function DELETE(_request: NextRequest, { params }: Params) {
   const user = await requireApiUser();
   if (!user) return NextResponse.json({ error: 'ログインが必要です。' }, { status: 401 });
+  if (!canWrite(user)) return NextResponse.json({ error: WRITE_DENIED_MESSAGE }, { status: 403 });
 
   const { id } = await params;
   try {

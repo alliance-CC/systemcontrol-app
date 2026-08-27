@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import './globals.css';
 import { getCurrentUser } from '@/lib/session';
+import { canWrite } from '@/lib/permissions';
 import LogoutButton from '@/components/LogoutButton';
 
 export const metadata: Metadata = {
@@ -24,11 +25,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               </Link>
               <nav>
                 <Link href="/">一覧・検索</Link>
-                <Link href="/new">新規登録</Link>
+                {canWrite(user) && <Link href="/new">新規登録</Link>}
                 <Link href="/support">現場サポート</Link>
               </nav>
               <span className="site-header__spacer" />
-              <span className="site-header__user">{user.login_id}</span>
+              <span className="site-header__user">
+                {user.login_id}
+                {!canWrite(user) && <span className="badge" style={{ marginLeft: 6 }}>閲覧のみ</span>}
+              </span>
               <LogoutButton />
             </div>
           </header>

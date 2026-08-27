@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { requireUser } from '@/lib/session';
+import { requireAdmin } from '@/lib/session';
 import { getRecord, listRecords } from '@/lib/records';
 import { loadMaster } from '@/lib/master';
 import { getFieldSchema } from '@/config/fieldSchemas';
@@ -9,7 +9,7 @@ import type { MasterData } from '@/lib/types';
 export const dynamic = 'force-dynamic';
 
 export default async function EditRecordPage({ params }: { params: Promise<{ id: string }> }) {
-  await requireUser();
+  await requireAdmin();
   const { id } = await params;
 
   const record = await getRecord(id);

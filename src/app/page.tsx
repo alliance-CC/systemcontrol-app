@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { requireUser } from '@/lib/session';
+import { canWrite } from '@/lib/permissions';
 import { searchRecords, toSafeRecord } from '@/lib/records';
 import { STATUS_ICON, STATUS_LABEL, type HealthStatus, type SafeToolRecord } from '@/lib/types';
 
@@ -33,7 +34,7 @@ export default async function DashboardPage({
 }: {
   searchParams: Promise<{ q?: string }>;
 }) {
-  await requireUser();
+  const user = await requireUser();
   const { q } = await searchParams;
   const query = q ?? '';
 
@@ -90,8 +91,12 @@ export default async function DashboardPage({
       {groups.length === 0 && !loadError && (
         <p className="empty">
           {query ? '該当するデータがありませんでした。' : 'まだ登録がありません。'}
-          <br />
-          <Link href="/new">新規登録はこちら</Link>
+          {canWrite(user) && (
+            <>
+              <br />
+              <Link href="/new">新規登録はこちら</Link>
+            </>
+          )}
         </p>
       )}
 

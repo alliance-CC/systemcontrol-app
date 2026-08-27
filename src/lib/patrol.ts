@@ -1,4 +1,5 @@
 import { listRecords, writeStatuses } from './records';
+import { notifyStatusChanges, type StatusChange } from './notify';
 import { assertSafeUrl } from './urlGuard';
 import type { HealthStatus } from './types';
 
@@ -13,6 +14,8 @@ export type PatrolResult = {
   id: string;
   system_name: string;
   subcategory: string;
+  /** 前回のステータス。通知すべき変化の判定に使う */
+  previous: HealthStatus;
   status: HealthStatus;
   detail: string;
   checkedAt: string;
@@ -49,7 +52,11 @@ async function pingOne(url: string): Promise<{ status: HealthStatus; detail: str
   }
 }
 
-export async function runPatrol(): Promise<{ checked: number; results: PatrolResult[] }> {
+export async function runPatrol(): Promise<{
+  checked: number;
+  results: PatrolResult[];
+  notified: { sent: boolean; reason?: string; count: number };
+}> {
   const records = await listRecords(true);
   const targets = records.filter((record) => record.health_check_url.trim());
   const checkedAt = new Date().toISOString();
@@ -66,6 +73,7 @@ export async function runPatrol(): Promise<{ checked: number; results: PatrolRes
       id: record.id,
       system_name: record.system_name,
       subcategory: record.subcategory,
+      previous: record.last_status,
       status: judged.status,
       detail: judged.detail,
       checkedAt,
@@ -73,5 +81,17 @@ export async function runPatrol(): Promise<{ checked: number; results: PatrolRes
   });
 
   await writeStatuses(results.map((r) => ({ id: r.id, status: r.status, checkedAt })));
-  return { checked: results.length, results };
+
+  // 状態が変わったものだけ Webhook へ通知する（失敗しても監視結果の記録は済んでいる）
+  const changes: StatusChange[] = results.map((result) => ({
+    system_name: result.system_name,
+    subcategory: result.subcategory,
+    previous: result.previous,
+    current: result.status,
+    detail: result.detail,
+    checkedAt: result.checkedAt,
+  }));
+  const notified = await notifyStatusChanges(changes);
+
+  return { checked: results.length, results, notified };
 }

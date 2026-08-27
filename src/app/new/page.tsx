@@ -1,4 +1,4 @@
-import { requireUser } from '@/lib/session';
+import { requireAdmin } from '@/lib/session';
 import { loadMaster } from '@/lib/master';
 import { listRecords } from '@/lib/records';
 import RecordForm from '@/components/RecordForm';
@@ -7,7 +7,7 @@ import type { MasterData } from '@/lib/types';
 export const dynamic = 'force-dynamic';
 
 export default async function NewRecordPage() {
-  await requireUser();
+  await requireAdmin();
 
   let master: MasterData = { categories: [], subcategories: [], googleAccounts: [] };
   let systemNames: string[] = [];

@@ -46,6 +46,10 @@ export const env = {
     get users() {
       return optional('SHEET_TAB_USERS', 'users');
     },
+    /** 現場サポートの質問ログ。タブが無ければ記録しないだけで、機能は動く */
+    get supportLogs() {
+      return optional('SHEET_TAB_SUPPORT_LOGS', 'support_logs');
+    },
   },
   support: {
     get anthropicApiKey() {

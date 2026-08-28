@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { requireApiUser } from '@/lib/session';
 import { answerQuestion } from '@/lib/support/answer';
+import { appendQuestionLog } from '@/lib/support/log';
 
 /** 現場サポートモード：質問への回答 */
 
@@ -25,7 +26,19 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    return NextResponse.json(await answerQuestion(question));
+    const answer = await answerQuestion(question);
+
+    // 「答えられなかった質問」を集めるための記録。失敗しても回答は返す
+    await appendQuestionLog({
+      askedAt: '',
+      loginId: user.login_id,
+      question,
+      hit: answer.citations.length > 0,
+      citations: answer.citations.length,
+      needsDeveloper: answer.needsDeveloper,
+    });
+
+    return NextResponse.json(answer);
   } catch {
     return NextResponse.json({ error: '回答の作成に失敗しました。' }, { status: 500 });
   }

@@ -1,4 +1,6 @@
+import Link from 'next/link';
 import { requireUser } from '@/lib/session';
+import { canWrite } from '@/lib/permissions';
 import SupportConsole from '@/components/SupportConsole';
 
 /**
@@ -26,11 +28,14 @@ export default async function SupportPage({
             解決しないときは、開発者への依頼文をこの場で作成できます。
           </p>
         </div>
-        {tool && (
-          <div className="page-head__actions">
-            <span className="badge badge--accent">対象ツール: {tool}</span>
-          </div>
-        )}
+        <div className="page-head__actions">
+          {tool && <span className="badge badge--accent">対象ツール: {tool}</span>}
+          {canWrite(user) && (
+            <Link className="button button--ghost" href="/support/logs">
+              📝 質問ログ
+            </Link>
+          )}
+        </div>
       </div>
       <SupportConsole initialTool={tool ?? ''} requester={user.login_id} />
     </>

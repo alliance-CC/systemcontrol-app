@@ -25,6 +25,8 @@ Claude Code はアプリのコードと `.env.example` までは作れるが、*
    - **タブ1 `master`**：`category` / `subcategory` / `google_account`
    - **タブ2 `records`**：`id` / `system_name` / `google_account` / `category` / `subcategory` / `details_json` / `health_check_url` / `last_status` / `last_checked_at` / `search_blob` / `created_at` / `updated_at` / `created_by` / `updated_by`
    - **タブ3 `users`**：`login_id` / `password_hash` / `role` / `created_at`
+   - **タブ4 `support_logs`（任意）**：`asked_at` / `login_id` / `question` / `hit` / `citations` / `needs_developer`
+     現場サポートの質問ログ。作らなくても現場サポートは動く（記録されないだけ）。作ると管理者が `/support/logs` で「資料に当たらなかった質問」を確認できる。
 
 3. スプレッドシート右上の「共有」から、**手順2のサービスアカウントのメールを「編集者」で追加**する。人間アカウント以外はこのサービスアカウントのみに絞る。
 4. URL の `/d/` と `/edit` の間にある **スプレッドシート ID** を控える。

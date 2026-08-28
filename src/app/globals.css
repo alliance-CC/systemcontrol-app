@@ -1803,3 +1803,85 @@ code {
 .status-menu__item[aria-current='true'] .status-menu__count {
   color: var(--accent);
 }
+
+/* =========================================================
+   質問ログ（管理者のみ）
+   ========================================================= */
+
+.loglist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 2px;
+}
+.loglist__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+}
+.loglist__item:first-child {
+  border-top: none;
+}
+.loglist__count {
+  flex: none;
+  min-width: 30px;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: var(--r-full);
+  display: grid;
+  place-items: center;
+  background: var(--down-soft);
+  color: var(--down);
+  border: 1px solid color-mix(in srgb, var(--down) 30%, transparent);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+.loglist__count--ok {
+  background: var(--ok-soft);
+  color: var(--ok);
+  border-color: color-mix(in srgb, var(--ok) 25%, transparent);
+}
+.loglist__body {
+  min-width: 0;
+}
+.loglist__question {
+  display: block;
+  font-size: 14.5px;
+  word-break: break-word;
+}
+.loglist__meta {
+  display: block;
+  color: var(--text-subtle);
+  font-size: 12px;
+}
+
+.logtable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+.logtable th,
+.logtable td {
+  text-align: left;
+  padding: 9px 12px 9px 0;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.logtable th {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.logtable__when {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}

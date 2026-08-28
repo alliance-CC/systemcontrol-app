@@ -91,6 +91,7 @@
 
 - **down 通知**：`/api/patrol` で状態が変化したもの（up/unknown → down、down → up）だけを `NOTIFY_WEBHOOK_URL` へ通知する。Slack/Discord 両対応（`text` と `content` を同時に送る）。未設定・送信失敗でも監視の記録は完了させる。通知に機密値は含めない。
 - **権限分離**：`role` 列を実際に使う。判定は `src/lib/permissions.ts` に集約し、API（403）と画面（導線を出さない・`requireAdmin` でリダイレクト）の両方で同じ関数を使う。viewer は閲覧・検索・現場サポートのみ。
+- **質問ログ**：`/api/support/ask` が 日時・ログインID・質問文・資料に当たったか・依頼を勧めたか を `support_logs` タブへ 1 行追記する（`src/lib/support/log.ts`）。回答本文は保存しない。タブが無い・書き込みに失敗しても回答は返す（best-effort）。集計は `/support/logs`（admin のみ）で、**資料に当たらなかった質問＝次に書くべき資料**として多い順に出す。質問文に機密が書かれる可能性があるため viewer には見せない。
 - **画面上部は最小限にする**：一覧の上に警告バナーやステータスタイルを並べない。停止・エラーは**ヘッダーの通知ベル**（`src/components/NotificationBell.tsx`・件数バッジ＋一覧）に、状態での絞り込みは**右上のアイコンのホバーメニュー**（`src/components/StatusMenu.tsx`）にまとめる。検索欄は伸ばしすぎない。
 - **一覧の既定表示はカード送り**（`src/components/ToolDeck.tsx`）：中央に 1 件、前後を薄く重ねて表示し、左右ボタン・矢印キー・スワイプで送る。カードは**ツール 1 件**単位で、対応が必要な順（down → unknown → up → none）に並べる。`?view=list` でシステム単位のカード一覧に切り替えでき、検索語・ステータス絞り込みは切り替えをまたいで保持する。カード上でも機密値は初期表示に含めず、`SecretValue` 経由で押されたときだけ復号する。
 

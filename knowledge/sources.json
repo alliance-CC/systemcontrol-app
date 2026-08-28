@@ -1,0 +1,25 @@
+{
+  "_readme": "AI が読む資料の置き場所。フォルダを増やすか、GitHub リポジトリを sources に足すだけで参照先が増えます。書き方は docs/FIELD_SUPPORT.md を参照。",
+  "_example_github_source": {
+    "id": "juchu-kanri",
+    "label": "受注管理ツール",
+    "type": "github",
+    "repo": "alliance-CC/juchu-kanri",
+    "ref": "main",
+    "include": ["README.md", "docs/**/*.md"],
+    "description": "受注管理ツールのマニュアル",
+    "owner": "開発チーム",
+    "tags": ["業務システム"]
+  },
+  "sources": [
+    {
+      "id": "systemcontrol-app",
+      "label": "ツール管理システム",
+      "type": "local",
+      "path": "knowledge/ツール管理システム",
+      "description": "このシステム自体の使い方",
+      "owner": "開発チーム",
+      "tags": ["社内ツール"]
+    }
+  ]
+}
